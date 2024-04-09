@@ -50,29 +50,29 @@ def tangent(array,dB2D):
     # a 2D Brownian increment in the Affine plan of parameters (ker(A),array)
     return np.einsum('nij,nj -> ni',rotation_matrix,dB2D) + array
 
-def uniform_init(Npoints):
+def uniform_init(Npoints,radius0):
     """ Uniform repartition of polarisome proteins on the tip geometry"""
-    Z = np.random.rand(Npoints)
+    Z = np.random.rand(Npoints)*(1-radius0) + radius0
     theta = np.arccos(Z)
     phi = -np.pi + 2*np.pi*np.random.rand(Npoints)
     return np.stack(spherical_to_cartesian(theta,phi),axis = 1)
 
-def boundary(array):
+def boundary(array,radiuses):
     """ Treats the Boundary condition of points array that went out of the boundary"""
-    z = array[:,2]
+    z = array[:,2] - radiuses
     ind = np.where(z<0)
-    array[ind,2] = - array[ind,2]
+    array[ind,2] = 2*radiuses[ind] - array[ind,2]
     #array_out = array[ind]
     #n = array_out.size
     #if n > 0:
     #    array_out[:,2] = - array_out[:,2]
         
-def reflected_brownian_sphere(array,sigmas,dt):
+def reflected_brownian_sphere(array,sigmas,dt,radiuses):
     """ Samples the brownian increment sigmas = [n_samples,n_clusters]"""
     dB = sqrt(dt)*np.einsum("i,ij -> ij",sigmas, np.random.randn(array.shape[0],2))
     U = tangent(array,dB)
     U = project(U)
-    boundary(U)
+    boundary(U,radiuses)
     return U
     
 #%% Funcions treating contact
@@ -164,24 +164,26 @@ class Modelv2:
             pass
 
         # Second step we adapt the time step to the new relative poistions
-        self._adapt_dt_(tol,cross_sigmas_squares,cross_radiuses,dist)
+        self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
 
         # Third and final step, we update the positions of each clusters
         X = self.current_position[self.active,:]
-        sigmas = self.sigf(self.current_sizes[self.active])
-        U = reflected_brownian_sphere(X,sigmas,self.dt)
+        newsizes = self.current_sizes[self.active] 
+        sigmas = self.sigf(newsizes)
+        radiuses = self.radiusf(newsizes)
+        U = reflected_brownian_sphere(X,sigmas,self.dt,radiuses)
         self.current_position[self.active,:] = U
         self.times[self.active] += self.dt #update the clocks of all active clusters 
 
         return None
         
     
-    def _adapt_dt_(self,tol,cross_sigmas_squares,cross_radiuses,dist):
+    def _adapt_dt_(self,tol,cross_sigmas_squares,dist,cross_radiuses):
         """ Function adapting the time step to the current realtive cluster positions"""
         alpha = norm.ppf(tol)**(-2)
         #print(alpha)
         dtcircle = np.min(0.005/cross_sigmas_squares)
-        dt = np.min(((dist-cross_radiuses*0.9)**2/cross_sigmas_squares))*alpha
+        dt = np.min(((dist)**2/cross_sigmas_squares))*alpha
         
         self.dt = min(dtcircle,dt)
         return None
@@ -200,6 +202,8 @@ class Modelv2:
                 self.current_sizes = size_init.copy()
             except:
                 self.current_sizes = np.ones([self.n_clusters])
+
+            radius0 = np.min(self.radiusf(self.current_sizes))
             if position_init == 'center':
                 Y0 = np.zeros([1,3])
                 Y0[0,2] = 1
@@ -207,7 +211,7 @@ class Modelv2:
             elif position_init:
                 self.current_position = position_init
             else:
-                self.current_position = uniform_init(self.n_clusters)
+                self.current_position = uniform_init(self.n_clusters,radius0)
             if save_trajectories:
                 self.trajectories = [self.current_position[self.active]]
             else:

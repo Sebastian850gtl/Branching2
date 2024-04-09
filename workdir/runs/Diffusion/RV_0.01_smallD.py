@@ -16,9 +16,10 @@ from Brownian import Modelv2 as Model
 
 runtag = sys.argv[1]  # Simulation tag
 samples = sys.argv[2] # Number of samples used only if runvar == 1
-
-np.random.seed(runtag)
-n_sample = samples
+print(" Simulation of "+str(file_name)+", simulation tag : "+str(runtag))
+print(" Note that the tag serves also as a seed")
+np.random.seed(int(runtag))
+n_sample = int(samples)
 #Files locations
 
 save_path = '../../results/'+file_name+'/tmp/'
@@ -26,27 +27,30 @@ save_path = '../../results/'+file_name+'/tmp/'
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-save_path = save_path +runtag
 
-# Parameters
+
+
+#%% Just reducing time step for small encoutners
+
 radius = 0.01 # rayon d'un cluster de taille 1
-sigma = 1
+sigma1 = 1
+n_clusters = 2
 Ntmax = np.inf
 
-tol = 1e-4
-sigmaf = lambda x : sigma # diffusion d'un clu
 radiusf = lambda x : radius
 
-n_clusters_range = [2,5,10,20,50]
+#M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
+tol = 1e-5
+
+diffusion_range = np.arange(11)/5
 # Simulation
-
-for i,n_clusters in enumerate(n_clusters_range):
-
-    print(n_clusters)
-    monodisperse = np.ones([n_clusters])/n_clusters
-
+for i,D2 in enumerate(diffusion_range):
+    sigma2 = np.sqrt(2*D2)
+    sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
     M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-
-    save_name = save_path + '_' + str(i) 
+    save_path_i = save_path +"diffusion_"+ str(i)
+    if not os.path.exists(save_path_i):
+        os.makedirs(save_path_i)
+    save_name = save_path_i +"/simtag_" +runtag 
     M.run(Ntmax = Ntmax,tol = tol,
-                n_samples = n_sample,save_name = save_name,stop = n_clusters-1,size_init = monodisperse)
+                n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([2,1]))

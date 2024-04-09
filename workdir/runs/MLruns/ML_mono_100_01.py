@@ -20,10 +20,12 @@ np.random.seed(runtag)
 n_sample = samples
 #Files locations
 
-save_path = '../../results/'+file_name+'/tmp/'+runtag
+save_path = '../../results/'+file_name+'/tmp/'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
+
+save_path = save_path +runtag
 #Parameters
 # ML run with parameters that relate to the Brownina run
 

@@ -15,15 +15,17 @@ from Brownian import Modelv2 as Model
 
 runtag = sys.argv[1]  # Simulation tag
 samples = sys.argv[2] # Number of samples used only if runvar == 1
-
-np.random.seed(runtag)
-n_sample = samples
+print(" Simulation of "+str(file_name)+", simulation tag : "+str(runtag))
+print(" Note that the tag serves also as a seed")
+np.random.seed(int(runtag))
+n_sample = int(samples)
 #Files locations
 
-save_path = '../../results/'+file_name+'/tmp/'+runtag
+save_path = '../../results/'+file_name+'/tmp/'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
+
 
 #Parameters
 radius = 0.001 # rayon d'un cluster de taille 1
@@ -35,7 +37,7 @@ radiusf = lambda x : radius
 
 #M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 tol = 1e-4
-diffusion_range = np.arange(11)/5
+diffusion_range = np.arange(11)/2
 # Simulation
 
 for i,D2 in enumerate(diffusion_range):
@@ -43,6 +45,9 @@ for i,D2 in enumerate(diffusion_range):
     sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
     M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 
-    save_name = save_path + '_' + str(i) 
+    save_path_i = save_path +"diffusion_"+ str(i)
+    if not os.path.exists(save_path_i):
+        os.makedirs(save_path_i)
+    save_name = save_path_i +"/simtag_" +runtag 
     M.run(Ntmax = Ntmax,tol = tol,
                 n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([2,1]))
