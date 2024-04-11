@@ -23,7 +23,7 @@ np.random.seed(int(runtag))
 n_sample = int(samples)
 #Files locations
 
-save_path = '../../results/'+file_name+'/tmp/'
+save_path = '../../results/'+file_name+'/'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -46,9 +46,9 @@ M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 for n in [2,3,4,6,10]:
     tol = 10**(-n)
     print( 'keq =' +str(1/ norm.ppf(tol)**(-2)) )
-    save_path_n = save_path +"tol_e-"+ str(n)
+    save_path_n = save_path +"tol_e-"+ str(n)+'/tmp'
     if not os.path.exists(save_path_n):
         os.makedirs(save_path_n)
     save_name = save_path_n +"/simtag_" +runtag
     M.run(Ntmax = Ntmax,tol = 10**(-n),
-                n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([1,2]))
+                n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([2,1]),position_init = "center")

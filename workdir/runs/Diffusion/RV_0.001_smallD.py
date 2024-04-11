@@ -17,11 +17,11 @@ runtag = sys.argv[1]  # Simulation tag
 samples = sys.argv[2] # Number of samples used only if runvar == 1
 print(" Simulation of "+str(file_name)+", simulation tag : "+str(runtag))
 print(" Note that the tag serves also as a seed")
-np.random.seed(int(runtag))
+#np.random.seed(int(runtag))
 n_sample = int(samples)
 #Files locations
 
-save_path = '../../results/'+file_name+'/tmp/'
+save_path = '../../results/'+file_name+'/'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -45,7 +45,7 @@ for i,D2 in enumerate(diffusion_range):
     sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
     M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 
-    save_path_i = save_path +"diffusion_"+ str(i)
+    save_path_i = save_path +"diffusion_"+ str(i) + '/tmp'
     if not os.path.exists(save_path_i):
         os.makedirs(save_path_i)
     save_name = save_path_i +"/simtag_" +runtag 

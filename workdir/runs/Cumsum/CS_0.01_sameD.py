@@ -19,11 +19,11 @@ runtag = sys.argv[1]  # Simulation tag
 samples = sys.argv[2] # Number of samples used only if runvar == 1
 print(" Simulation of "+str(file_name)+", simulation tag : "+str(runtag))
 print(" Note that the tag serves also as a seed")
-np.random.seed(int(runtag))
+#np.random.seed(int(runtag))
 n_sample = int(samples)
 #Files locations
 
-save_path = '../../results/'+file_name+'/tmp/'
+save_path = '../../results/'+file_name+'/'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -45,7 +45,7 @@ M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 for n in [2,3,4,6,10]:
     tol = 10**(-n)
     print( 'keq =' +str(1/ norm.ppf(tol)**(-2)) )
-    save_path_n = save_path +"tol_e-"+ str(n)
+    save_path_n = save_path +"tol_e-"+ str(n)+'/tmp'
     if not os.path.exists(save_path_n):
         os.makedirs(save_path_n)
     save_name = save_path_n +"/simtag_" +runtag

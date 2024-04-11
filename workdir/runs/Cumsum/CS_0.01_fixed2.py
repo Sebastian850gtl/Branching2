@@ -11,7 +11,9 @@ sys.path.append('../models')
 sys.path.append('../lib')
 
 import numpy as np
+from scipy.stats import norm
 from Brownian import Modelv2 as Model
+
 
 runtag = sys.argv[1]  # Simulation tag
 samples = sys.argv[2] # Number of samples used only if runvar == 1
@@ -26,28 +28,27 @@ save_path = '../../results/'+file_name+'/'
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-
-#Parameters
-radius = 0.001 # rayon d'un cluster de taille 1
+#%% Parameters
+r = 0.01 # rayon d'un cluster de taille 1
 sigma1 = 1
+sigma2 = 0
 n_clusters = 2
 Ntmax = np.inf
 
-radiusf = lambda x : radius
+sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x>1)
+radiusf = lambda x : r
 
-#M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-tol = 1e-4
-diffusion_range = np.arange(11)/2
-# Simulation
+M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 
-for i,D2 in enumerate(diffusion_range):
-    sigma2 = np.sqrt(2*D2)
-    sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
-    M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 
-    save_path_i = save_path +"diffusion_"+ str(i) + '/tmp'
-    if not os.path.exists(save_path_i):
-        os.makedirs(save_path_i)
-    save_name = save_path_i +"/simtag_" +runtag 
-    M.run(Ntmax = Ntmax,tol = tol,
+# simulation
+
+for n in [2,3,4,6,10,14]:
+    tol = 10**(-n)
+    print( 'keq =' +str(1/ norm.ppf(tol)**(-2)) )
+    save_path_n = save_path +"tol_e-"+ str(n)+'/tmp'
+    if not os.path.exists(save_path_n):
+        os.makedirs(save_path_n)
+    save_name = save_path_n +"/simtag_" +runtag
+    M.run(Ntmax = Ntmax,tol = 10**(-n),
                 n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([2,1]))

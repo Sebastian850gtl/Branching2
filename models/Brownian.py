@@ -11,6 +11,51 @@ from time import time
 
 from scipy.stats import norm
 
+# The exact increments of Brownian on the sphere
+def sample_infinite_descent(t,tol = 1e-1):
+    n = int(1/tol*np.max(1/t))
+    size = t.shape[0]
+    res_array = np.ones([size])*n
+    k = n
+    n_active = size
+    s = t.copy()
+    array = np.zeros([size])
+    while n_active > 0 and k > 0:
+        new_array = array + np.random.exponential(2/(k*(k+1)),n_active)
+        
+        indices = np.where(new_array < s) # le nombre qui est plus petit que t
+
+        n_active = len(indices[0])
+        res_array[indices] = res_array[indices] - 1
+        array = new_array[indices]
+        s = s[indices]
+        k = k - 1
+    return res_array
+
+def sample_WF(t,a,b,tol = 1e-1):
+    M = sample_infinite_descent(t,tol = tol)
+    Y = np.random.beta(a,b+M)
+    return Y.reshape(-1)
+
+
+def sample_exactBr(start,dt,tol = 1e-1):
+    size,_ = start.shape
+    X = sample_WF(dt,1,1,tol = tol)
+
+    phi = np.random.rand(size)*2*np.pi
+
+    I = np.tile(np.eye(3),(size,1,1))
+    ed = np.concatenate((np.zeros([size,2]),np.ones([size,1])),axis = 1)
+    u = project(ed-start)
+    O = I - 2*np.einsum('ij,ik-> ijk',u,u)
+
+    var = 2 * np.sqrt(X*(1-X))
+    first_coordinate,second_coordinate,third_coordinate  = var *cos(phi) , var * sin(phi), 1 - 2*X
+    vec = np.stack((first_coordinate,second_coordinate,third_coordinate),axis = 1)
+
+    res = np.einsum('ijk,ik-> ij',O,vec)
+    #print(np.sum(res**2)/size)
+    return res
 #%% Core functions,
 # All points are on a sphere of center 0,0,0 and radius 1
 # We use physical spherical coordinates azimuth is phi in [0,2*Pi] and elevation is theta in [0,Pi]
@@ -23,6 +68,10 @@ def project(array):
 
 def cartesian_to_spherical(x,y,z):
     theta = arccos(z)
+    if any(np.isnan(theta)):
+        print(z)
+        print(theta)
+        print(type(z))
     phi = arctan2(y,x) # equal to arctan(y/x) when x is not 0 and y>0, arctan(y/x) + pi when x not 0 and y <= 0. 
     return theta,phi
 
@@ -52,28 +101,49 @@ def tangent(array,dB2D):
 
 def uniform_init(Npoints,radius0):
     """ Uniform repartition of polarisome proteins on the tip geometry"""
-    Z = np.random.rand(Npoints)*(1-radius0) + radius0
+    #Z = np.random.rand(Npoints)*(1-radius0) + radius0
+    Z = np.random.rand(Npoints)
     theta = np.arccos(Z)
     phi = -np.pi + 2*np.pi*np.random.rand(Npoints)
     return np.stack(spherical_to_cartesian(theta,phi),axis = 1)
 
 def boundary(array,radiuses):
     """ Treats the Boundary condition of points array that went out of the boundary"""
-    z = array[:,2] - radiuses
+    z = array[:,2]# - radiuses
     ind = np.where(z<0)
-    array[ind,2] = 2*radiuses[ind] - array[ind,2]
+    array[ind,2] =  - array[ind,2] #+ 2*radiuses[ind]
     #array_out = array[ind]
     #n = array_out.size
     #if n > 0:
     #    array_out[:,2] = - array_out[:,2]
-        
-def reflected_brownian_sphere(array,sigmas,dt,radiuses):
-    """ Samples the brownian increment sigmas = [n_samples,n_clusters]"""
+
+def reflected_brownian_sphere_old(array,sigmas,dt,radiuses):
     dB = sqrt(dt)*np.einsum("i,ij -> ij",sigmas, np.random.randn(array.shape[0],2))
     U = tangent(array,dB)
     U = project(U)
     boundary(U,radiuses)
     return U
+        
+def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.05):
+    """ Samples the brownian increment sigmas = [n_samples,n_clusters]"""
+    n_clusters,_ = array.shape
+    dtsigmas = np.sqrt(dt)*sigmas
+
+    itangent = np.where(dtsigmas < switch)
+    iexact = np.where(dtsigmas >= switch)
+    res = np.zeros([n_clusters,3])
+
+    array_tangent = array[itangent]
+    array_exact = array[iexact]
+
+    dB = sqrt(dt)*np.einsum("i,ij -> ij",sigmas[itangent], np.random.randn(array_tangent.shape[0],2))
+    U = tangent(array_tangent,dB)
+    U = project(U)
+    res[itangent] = U
+    if len(iexact[0])>0:
+        res[iexact] = sample_exactBr(array_exact,dt*sigmas[iexact],tol = 1)
+    boundary(res,radiuses)
+    return res
     
 #%% Funcions treating contact
 def auxl(darr1):
@@ -182,7 +252,7 @@ class Modelv2:
         """ Function adapting the time step to the current realtive cluster positions"""
         alpha = norm.ppf(tol)**(-2)
         #print(alpha)
-        dtcircle = np.min(0.005/cross_sigmas_squares)
+        dtcircle = 2#np.min(0.004/cross_sigmas_squares)
         dt = np.min(((dist)**2/cross_sigmas_squares))*alpha
         
         self.dt = min(dtcircle,dt)
@@ -207,7 +277,7 @@ class Modelv2:
             if position_init == 'center':
                 Y0 = np.zeros([1,3])
                 Y0[0,2] = 1
-                self.current_position = np.concatenate((Y0,uniform_init(self.n_clusters-1)),axis = 0)
+                self.current_position = np.concatenate((Y0,uniform_init(self.n_clusters-1,0)),axis = 0)
             elif position_init:
                 self.current_position = position_init
             else:
