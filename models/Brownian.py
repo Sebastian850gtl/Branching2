@@ -13,6 +13,7 @@ from scipy.stats import norm
 
 # The exact increments of Brownian on the sphere
 def sample_infinite_descent(t,tol = 1e-1):
+    #print(t)
     n = int(1/tol*np.max(1/t))
     size = t.shape[0]
     res_array = np.ones([size])*n
@@ -20,15 +21,16 @@ def sample_infinite_descent(t,tol = 1e-1):
     n_active = size
     s = t.copy()
     array = np.zeros([size])
+    remaining = np.arange(size)
     while n_active > 0 and k > 0:
         new_array = array + np.random.exponential(2/(k*(k+1)),n_active)
         
         indices = np.where(new_array < s) # le nombre qui est plus petit que t
-
+        remaining = remaining[indices]
         n_active = len(indices[0])
-        res_array[indices] = res_array[indices] - 1
+        res_array[remaining] = res_array[remaining] - 1
         array = new_array[indices]
-        s = s[indices]
+        s = s[remaining]
         k = k - 1
     return res_array
 
@@ -241,7 +243,7 @@ class Modelv2:
         newsizes = self.current_sizes[self.active] 
         sigmas = self.sigf(newsizes)
         radiuses = self.radiusf(newsizes)
-        U = reflected_brownian_sphere(X,sigmas,self.dt,radiuses)
+        U = reflected_brownian_sphere_old(X,sigmas,self.dt,radiuses)
         self.current_position[self.active,:] = U
         self.times[self.active] += self.dt #update the clocks of all active clusters 
 
@@ -252,10 +254,154 @@ class Modelv2:
         """ Function adapting the time step to the current realtive cluster positions"""
         alpha = norm.ppf(tol)**(-2)
         #print(alpha)
-        dtcircle = 2#np.min(0.004/cross_sigmas_squares)
+        dtcircle = np.min(0.004/cross_sigmas_squares)
         dt = np.min(((dist)**2/cross_sigmas_squares))*alpha
         
         self.dt = min(dtcircle,dt)
+        return None
+        
+    def run(self,Ntmax,n_samples = 1,stop = 1,tol = 1e-3,position_init = False,size_init = False
+            ,save_trajectories = False, save_name = None):
+        
+        print("Start of the run number of samples : "+str(n_samples))
+        t0 = time()
+        self.sample_sizes = np.zeros([n_samples,self.n_clusters,self.n_clusters])
+        self.sample_times = np.zeros([n_samples,self.n_clusters])
+        for idi in range(n_samples):
+            self.active = list(range(self.n_clusters))
+            try: 
+                size_init.shape
+                self.current_sizes = size_init.copy()
+            except:
+                self.current_sizes = np.ones([self.n_clusters])
+
+            radius0 = np.min(self.radiusf(self.current_sizes))
+            if position_init == 'center':
+                Y0 = np.zeros([1,3])
+                Y0[0,2] = 1
+                self.current_position = np.concatenate((Y0,uniform_init(self.n_clusters-1,0)),axis = 0)
+            elif position_init:
+                self.current_position = position_init
+            else:
+                self.current_position = uniform_init(self.n_clusters,radius0)
+            if save_trajectories:
+                self.trajectories = [self.current_position[self.active]]
+            else:
+                pass
+            
+            self.times = np.zeros([self.n_clusters])
+            self.sizes = np.tile(self.current_sizes,(self.n_clusters,1))
+
+            k = 0
+            while k <= Ntmax and len(self.active) >stop:
+                #print(len(self.active))
+                k = k + 1
+                self._update_(tol)
+                if save_trajectories:
+                    self.trajectories.append(self.current_position)
+                else:
+                    pass
+            
+            sorted_indices = np.argsort(self.times)
+            self.times = self.times[sorted_indices]
+            self.sizes = self.sizes[sorted_indices,:]
+            self.sample_times[idi,:] = self.times
+            self.sample_sizes[idi,:,:] = self.sizes
+            print('\r',   'Advancement : %.1f'%(((idi+1)/n_samples)*100)+' %', 'done in %.2fs.' % (time() - t0),end='')
+        print("End")
+        print("Saving samples")
+        if save_name:
+            try:
+                previous_save_sizes = np.load(save_name+'_sizes.npy')
+                previous_save_times = np.load(save_name+'_times.npy')
+                np.save(save_name+'_sizes.npy',np.concatenate((self.sample_sizes,previous_save_sizes),axis = 0))
+                np.save(save_name+'_times.npy',np.concatenate((self.sample_times,previous_save_times),axis = 0))
+            except:
+                np.save(save_name+'_sizes.npy',self.sample_sizes)
+                np.save(save_name+'_times.npy',self.sample_times)
+        else:
+            pass
+# When a cluster becomes inactive its clock stops naturally
+        
+class Modelv3:
+    """ Simulation of the Browninan Coalescence on the surface of a semi-sphere of radius 1 with reflective boundary conditions."""
+    def __init__(self,n_clusters,sigmafun,radfun):
+        """
+        n_clusters, integer : Number of initial clusters.
+        sigmafun : Standard deviation function : $\sigma(x) = \sqrt{2D(x)}$ where $D$ is the diffusion function.
+        radfun : Radius function.
+        """
+        self.n_clusters = n_clusters
+        self.sigf = np.vectorize(sigmafun)
+        self.radiusf = np.vectorize(radfun)
+        
+        self.dt = 0 # Adaptative time step
+
+        self.times = None # shape = n_clusters
+        self.sizes = None # shape = n_clusters x n_clusters 
+        
+        self.active = [] # List of active clusters. It is initialized in the run method not here.
+        self.trajectories = None # Tab of trajectories, only usfull for visual reprenstations.
+        
+        self.current_position = None # The current positions in cartesian coordiantes of the clusters.
+        self.current_sizes = None # The current sizes of all clusters, the size is a positive real value.
+        
+        self.sample_sizes = None # 3D array n_samples x n_clusters x n_clusters, that the run method will save.
+        self.sample_times = None # 2D array n_samples x n_clusters, second return of the run method.
+        
+        return None
+    
+    def _update_(self,tol):
+        # We set the usefull varaibles
+        X = self.current_position[self.active,:] # varaible for updating active clusters positionsize = self.current_sizes[self.active]
+        size = self.current_sizes[self.active].copy()
+        sigmas = self.sigf(size)
+        radiuses = self.radiusf(size)
+            # Collection of arrays giving for each distinct couples (1,2) : |Z_1 - Z_2|, r1 + r2, sigma1^2 + sigma2^2 
+        dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,radiuses,sigmas)
+        # First step we test if there is any contact at the current step
+        
+        contact_indices_glob = np.where(dist < cross_radiuses) # The indices in the list of all couple
+        #  operation retrieving indices of the colliding couples
+        contact_indices_i,contac_indices_j = triu_indices[0][contact_indices_glob], triu_indices[1][contact_indices_glob]
+            # If contact.
+            # For n > 2 simultaneous collisions we remove n-1 clusters of the active list and the only remaing cluster mass is updated to the sum of
+            # the n colliding masses. This treatment is done below: The loop is iterating thgrough an adjacence matrix where adjacent nodes are
+            # the indices of colliding clusters.
+        if len(contact_indices_i) > 0:
+            for i,j in zip(contact_indices_i,contac_indices_j):
+                size[j] = size[i] + size[j]
+                size[i] = 0
+            self.current_sizes[self.active] = size #updates active cluster sizes
+            # popping elements in contact_indices_i
+            for ki,i in enumerate(contact_indices_i):
+                self.active.pop(i-ki) # We have to substract ki because the list self.active looses 1 element at each iteration.
+
+            self.sizes[self.active,:] = np.tile(self.current_sizes,(len(self.active),1))
+        else:
+            pass
+
+        # Second step we adapt the time step to the new relative poistions
+        self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
+
+        # Third and final step, we update the positions of each clusters
+        X = self.current_position[self.active,:]
+        newsizes = self.current_sizes[self.active] 
+        sigmas = self.sigf(newsizes)
+        radiuses = self.radiusf(newsizes)
+        U = reflected_brownian_sphere(X,sigmas,self.dt,radiuses)
+        self.current_position[self.active,:] = U
+        self.times[self.active] += self.dt #update the clocks of all active clusters 
+
+        return None
+        
+    
+    def _adapt_dt_(self,tol,cross_sigmas_squares,dist,cross_radiuses):
+        """ Function adapting the time step to the current realtive cluster positions"""
+        alpha = norm.ppf(tol)**(-2)
+        dt = np.min(((dist)**2/cross_sigmas_squares))*alpha
+        
+        self.dt = dt
         return None
         
     def run(self,Ntmax,n_samples = 1,stop = 1,tol = 1e-3,position_init = False,size_init = False

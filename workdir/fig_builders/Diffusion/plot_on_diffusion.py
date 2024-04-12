@@ -19,7 +19,7 @@ if not os.path.exists(fig_path):
     os.makedirs(fig_path)
 
 # Parameters
-radius = 0.001 # rayon d'un cluster de taille 1
+radius = 0.01 # rayon d'un cluster de taille 1
 sigma1 = 1
 n_clusters = 2
 Ntmax = np.inf
@@ -36,7 +36,7 @@ diffusion_range = np.arange(11)/5
 
 D1 = sigma1**2/2
 R = 1
-f = lambda x : (-np.log(radius/R)  - 1/2)* 1/(x + D1)
+f = lambda x : (-np.log(radius/R) + np.log(2)  - 1/2)* 1/(x + D1)
 
 
 diff_linspace = np.linspace(diffusion_range[0],diffusion_range[-1]*1.05,200)

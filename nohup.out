@@ -1,0 +1,16 @@
+ Simulation of CS_0.01_fixedv3, simulation tag : 1
+ Note that the tag serves also as a seed
+keq =5.411894431054339
+Start of the run number of samples : 5000
+ Advancement : 0.0 % done in 0.10s. Advancement : 0.0 % done in 0.11s. Advancement : 0.1 % done in 0.14s. Advancement : 0.1 % done in 0.18s. Advancement : 0.1 % done in 0.22s. Advancement : 0.1 % done in 0.53s. Advancement : 0.1 % done in 0.64s. Advancement : 0.2 % done in 0.82s. Advancement : 0.2 % done in 1.05s. Advancement : 0.2 % done in 1.09s. Advancement : 0.2 % done in 1.11s. Advancement : 0.2 % done in 1.15s. Advancement : 0.3 % done in 1.24s. Advancement : 0.3 % done in 1.40s. Advancement : 0.3 % done in 1.57s.Traceback (most recent call last):
+  File "workdir/runs/Cumsum/CS_0.01_fixedv3.py", line 53, in <module>
+    M.run(Ntmax = Ntmax,tol = 10**(-n),
+  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 442, in run
+    self._update_(tol)
+  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 389, in _update_
+    sigmas = self.sigf(newsizes)
+  File "/usr/lib/python3/dist-packages/numpy/lib/function_base.py", line 2091, in __call__
+    return self._vectorize_call(func=func, args=vargs)
+  File "/usr/lib/python3/dist-packages/numpy/lib/function_base.py", line 2161, in _vectorize_call
+    ufunc, otypes = self._get_ufunc_and_otypes(func=func, args=args)
+KeyboardInterrupt
