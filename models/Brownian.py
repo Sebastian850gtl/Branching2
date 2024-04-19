@@ -9,55 +9,8 @@ import numpy as np
 from numpy import cos,sin,arcsin,arctan2,arccos,sqrt,pi
 from time import time
 
-from scipy.stats import norm
-
-# The exact increments of Brownian on the sphere
-def sample_infinite_descent(t,tol = 1e-1):
-    #print(t)
-    n = int(1/tol*np.max(1/t))
-    size = t.shape[0]
-    res_array = np.ones([size])*n
-    k = n
-    n_active = size
-    s = t.copy()
-    array = np.zeros([size])
-    remaining = np.arange(size)
-    while n_active > 0 and k > 0:
-        new_array = array + np.random.exponential(2/(k*(k+1)),n_active)
-        
-        indices = np.where(new_array < s) # le nombre qui est plus petit que t
-        remaining = remaining[indices]
-        n_active = len(indices[0])
-        res_array[remaining] = res_array[remaining] - 1
-        array = new_array[indices]
-        s = s[remaining]
-        k = k - 1
-    return res_array
-
-def sample_WF(t,a,b,tol = 1e-1):
-    M = sample_infinite_descent(t,tol = tol)
-    Y = np.random.beta(a,b+M)
-    return Y.reshape(-1)
 
 
-def sample_exactBr(start,dt,tol = 1e-1):
-    size,_ = start.shape
-    X = sample_WF(dt,1,1,tol = tol)
-
-    phi = np.random.rand(size)*2*np.pi
-
-    I = np.tile(np.eye(3),(size,1,1))
-    ed = np.concatenate((np.zeros([size,2]),np.ones([size,1])),axis = 1)
-    u = project(ed-start)
-    O = I - 2*np.einsum('ij,ik-> ijk',u,u)
-
-    var = 2 * np.sqrt(X*(1-X))
-    first_coordinate,second_coordinate,third_coordinate  = var *cos(phi) , var * sin(phi), 1 - 2*X
-    vec = np.stack((first_coordinate,second_coordinate,third_coordinate),axis = 1)
-
-    res = np.einsum('ijk,ik-> ij',O,vec)
-    #print(np.sum(res**2)/size)
-    return res
 #%% Core functions,
 # All points are on a sphere of center 0,0,0 and radius 1
 # We use physical spherical coordinates azimuth is phi in [0,2*Pi] and elevation is theta in [0,Pi]
@@ -126,27 +79,6 @@ def reflected_brownian_sphere_old(array,sigmas,dt,radiuses):
     boundary(U,radiuses)
     return U
         
-def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.05):
-    """ Samples the brownian increment sigmas = [n_samples,n_clusters]"""
-    n_clusters,_ = array.shape
-    dtsigmas = np.sqrt(dt)*sigmas
-
-    itangent = np.where(dtsigmas < switch)
-    iexact = np.where(dtsigmas >= switch)
-    res = np.zeros([n_clusters,3])
-
-    array_tangent = array[itangent]
-    array_exact = array[iexact]
-
-    dB = sqrt(dt)*np.einsum("i,ij -> ij",sigmas[itangent], np.random.randn(array_tangent.shape[0],2))
-    U = tangent(array_tangent,dB)
-    U = project(U)
-    res[itangent] = U
-    if len(iexact[0])>0:
-        res[iexact] = sample_exactBr(array_exact,dt*sigmas[iexact],tol = 1)
-    boundary(res,radiuses)
-    return res
-    
 #%% Funcions treating contact
 def auxl(darr1):
     return np.tril(darr1,k = -1).T
@@ -234,28 +166,33 @@ class Modelv2:
             self.sizes[self.active,:] = np.tile(self.current_sizes,(len(self.active),1))
         else:
             pass
+        
+        if len(self.active)> 1:
+            # Second step we adapt the time step to the new relative poistions
+            X = self.current_position[self.active,:] # varaible for updating active clusters positionsize = self.current_sizes[self.active]
+            size = self.current_sizes[self.active].copy()
+            sigmas = self.sigf(size)
+            radiuses = self.radiusf(size)
+            # Collection of arrays giving for each distinct couples (1,2) : |Z_1 - Z_2|, r1 + r2, sigma1^2 + sigma2^2 
+            dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,radiuses,sigmas)
 
-        # Second step we adapt the time step to the new relative poistions
-        self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
+            self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
 
-        # Third and final step, we update the positions of each clusters
-        X = self.current_position[self.active,:]
-        newsizes = self.current_sizes[self.active] 
-        sigmas = self.sigf(newsizes)
-        radiuses = self.radiusf(newsizes)
-        U = reflected_brownian_sphere_old(X,sigmas,self.dt,radiuses)
-        self.current_position[self.active,:] = U
-        self.times[self.active] += self.dt #update the clocks of all active clusters 
-
+            # updating position
+            U = reflected_brownian_sphere_old(X,sigmas,self.dt,radiuses)
+            self.current_position[self.active,:] = U
+            self.times[self.active] += self.dt #update the clocks of all active clusters 
+        else:
+            pass
         return None
         
     
     def _adapt_dt_(self,tol,cross_sigmas_squares,dist,cross_radiuses):
         """ Function adapting the time step to the current realtive cluster positions"""
-        alpha = norm.ppf(tol)**(-2)
         #print(alpha)
         dtcircle = np.min(0.004/cross_sigmas_squares)
-        dt = np.min(((dist)**2/cross_sigmas_squares))*alpha
+        
+        dt = np.min(((dist)**2/(2*cross_sigmas_squares)))* -np.log(1-tol)
         
         self.dt = min(dtcircle,dt)
         return None
@@ -322,7 +259,183 @@ class Modelv2:
         else:
             pass
 # When a cluster becomes inactive its clock stops naturally
+
+# The exact increments of Brownian on the sphere
         
+def first_decay(t,m):
+    k = m
+    while ((2*k + 3)/(2*k + 1))*((m + k + 1)/(k-m + 1)) > np.exp((k+1)*t):
+        k = k + 1
+    return k
+
+def coeffs_A(m,k,previous_A):
+    try:
+        previous_A[m,k]
+        return  previous_A
+    except:
+        M,K = previous_A.shape
+        new_array = np.zeros([max(m+1,M),max(k+1,K)])
+        new_array[:M,:K] = previous_A
+        for n in range(M,m+1):
+            new_array[n,n] = new_array[n-1,n-1]* 2 * (2*n + 1)/(n+1)
+            for k in range(n+1,max(k+1,K)):
+                new_array[n,k] = (2*k +1)/(2*k - 1) * (n + k)/(k - n) * new_array[n,k-1]
+        for n in range(M):
+            for k in range(K,k+1):
+                new_array[n,k] = (2*k +1)/(2*k - 1) * (n + k)/(k - n) * new_array[n,k-1]
+        return new_array
+
+def sum_on_i(t,k,M,A):
+    s = 0
+    A = coeffs_A(M,M+k,A)
+    for i in range(k+1):
+        s += (-1)**i * A[M,M+i]* np.exp(-(M+i)*(M+i+1)*t/2)
+    return s, A
+
+def sum_on_m1(t,karray,A):
+    s = 0
+    M = len(karray) - 1
+    A = coeffs_A(M ,M + 2*np.max(karray) + 2,A)
+    for m, km in enumerate(karray):
+        i = 2*km + 2
+        s = s + A[m,m + i ] *np.exp(-(m + i)*(m + i + 1)*t/2)
+    return s, A
+
+def sum_on_m2(t,karray,A):
+    s = 0
+    M = len(karray) - 1
+    A = coeffs_A(M ,M + 2*np.max(karray) + 3,A)
+    for m, km in enumerate(karray):
+        i = 2*km + 3
+        s = s + A[m,m + i ] *np.exp(-(m + i)*(m + i + 1)*t/2)
+    return s, A
+
+def sampleA_infinte_exact(t):
+    m  = 0
+    k0 = int(first_decay(t,m)/2) + 1
+    karray = np.array([k0])
+    U = np.random.rand()
+
+    A = np.ones([1,1])
+
+    Skplus_m, A = sum_on_i(t,2*k0,m,A)
+    Skminus_m, A = sum_on_i(t,2*k0 + 1,m,A)
+    while True:
+        #print( "Step m = "+str(m))
+        #print(m, Skminus_m,Skplus_m, U)
+        while Skminus_m < U  and Skplus_m > U:
+            #print("Thining for m = "+str(m))
+            #print(Skminus_m, Skplus_m, U)
+            sum, A = sum_on_m1(t,karray,A)
+            Skplus_m = Skminus_m + sum
+
+            sum, A = sum_on_m2(t,karray,A)
+            Skminus_m = Skplus_m - sum
+
+            karray += 1
+        if Skminus_m > U:
+            return m
+        else:
+            m = m + 1
+            km = int(first_decay(t,m)/2) + 1
+            karray = np.concatenate((karray,np.array([km])))
+
+            sum, A = sum_on_i(t,2*km,m,A)
+            Skplus_m  = Skplus_m + sum
+
+            sum, A = sum_on_i(t,2*km + 1,m,A)
+            Skminus_m = Skminus_m + sum
+
+def sampleA_infinite_normal(t):
+    """ For small time steps"""
+    beta = t/2
+    eta = beta/(np.exp(beta) - 1)
+    mu = 2*eta/t
+    sigma_sample_inf = np.sqrt(mu* (1 + eta/(eta + beta) - 2*eta))*(eta + beta)/beta
+    return int(mu + sigma_sample_inf*np.random.randn()) + 1
+
+def sampleA_infinte(t):
+    if t >= 0.1:
+        return sampleA_infinte_exact(t)
+    else:
+        return sampleA_infinite_normal(t)
+
+# def sample_infinite_descent(t,tol = 1e-3):
+#     n = int(1/tol*np.max(1/t))
+#     size = t.shape[0]
+#     res_array = np.ones([size])*n
+#     k = n
+#     n_active = size
+#     s = t.copy()
+#     array = np.zeros([size])
+#     remaining = np.arange(size)
+#     while n_active > 0 and k > 0:
+#         new_array = array + np.random.exponential(2/(k*(k+1)),n_active)
+        
+#         indices = np.where(new_array < s) # le nombre qui est plus petit que t
+#         remaining = remaining[indices]
+#         n_active = len(indices[0])
+#         res_array[remaining] = res_array[remaining] - 1
+#         array = new_array[indices]
+#         s = s[remaining]
+#         k = k - 1
+#     return res_array
+
+def sample_WF(t,a,b):
+    #print(t)
+    #M = sample_infinite_descent(t,tol = tol)
+    M = np.vectorize(sampleA_infinte)(t)
+    if M[0] < 0:
+        print(M)
+    Y = np.random.beta(a,b+M)
+    return Y.reshape(-1)
+
+
+def sample_exactBr(start,dt):
+    size,_ = start.shape
+    X = sample_WF(dt,1,1)
+
+    phi = np.random.rand(size)*2*np.pi
+    u = -start.copy()
+    u[:,2] = 1 + u[:,2] 
+    u = project(u)
+    #u[np.where( u[:,2] > 0)]
+    # if u[:,2] > 0:
+    #     u = project(u)
+    # else:
+    #     pass
+    O = np.einsum('ij,ik-> ijk',u,u)
+
+    var = 2 * np.sqrt(X*(1-X))
+    first_coordinate,second_coordinate,third_coordinate  = var *cos(phi) , var * sin(phi), 1 - 2*X
+    vec = np.stack((first_coordinate,second_coordinate,third_coordinate),axis = 1)
+
+    res = vec - 2*np.einsum('ijk,ik-> ij',O,vec)
+    #print(np.sum(res**2)/size)
+    return res
+
+def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.001):
+    """ Samples the brownian increment sigmas = [n_samples,n_clusters]
+        Switch is in time"""
+    n_clusters,_ = array.shape
+    dtsigmas = dt*sigmas**2
+
+    itangent = np.where(dtsigmas < switch)
+    iexact = np.where(dtsigmas >= switch)
+    res = np.zeros([n_clusters,3])
+
+    array_tangent = array[itangent]
+    array_exact = array[iexact]
+
+    dB = sqrt(dt)*np.einsum("i,ij -> ij",sigmas[itangent], np.random.randn(array_tangent.shape[0],2))
+    U = tangent(array_tangent,dB)
+    U = project(U)
+    res[itangent] = U
+    if len(iexact[0])>0:
+        res[iexact] = sample_exactBr(array_exact,dtsigmas[iexact])
+    boundary(res,radiuses)
+    return res
+    
 class Modelv3:
     """ Simulation of the Browninan Coalescence on the surface of a semi-sphere of radius 1 with reflective boundary conditions."""
     def __init__(self,n_clusters,sigmafun,radfun):
@@ -398,9 +511,7 @@ class Modelv3:
     
     def _adapt_dt_(self,tol,cross_sigmas_squares,dist,cross_radiuses):
         """ Function adapting the time step to the current realtive cluster positions"""
-        alpha = norm.ppf(tol)**(-2)
-        dt = np.min(((dist)**2/cross_sigmas_squares))*alpha
-        
+        dt = np.min(((dist)**2/(2*cross_sigmas_squares)))* tol
         self.dt = dt
         return None
         
@@ -438,7 +549,6 @@ class Modelv3:
 
             k = 0
             while k <= Ntmax and len(self.active) >stop:
-                #print(len(self.active))
                 k = k + 1
                 self._update_(tol)
                 if save_trajectories:
