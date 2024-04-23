@@ -14,18 +14,23 @@ import numpy as np
 from ML import Coalescence
 
 runtag = sys.argv[1]  # Simulation tag
-samples = sys.argv[2] # Number of samples used only if runvar == 1
+samples = int(sys.argv[2]) # Number of samples used only if runvar == 1
+plot = bool(int(sys.argv[3]))
 
-np.random.seed(runtag)
+np.random.seed(int(runtag))
 n_sample = samples
 #Files locations
 
-save_path = '../../results/'+file_name+'/tmp/'
+save_path = '../../results/'+file_name+'/'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-save_path = save_path +runtag
+fig_path = '../../results/fig/'
+if not os.path.exists(fig_path):
+    os.makedirs(fig_path)
+
+save_path = save_path
 #Parameters
 # ML run with parameters that relate to the Brownina run
 
@@ -42,12 +47,40 @@ beta_range = [0,1/3,1/2,1]
 monodisperse = np.ones([n_clusters])/n_clusters
 # Simulation
 
-for i,alpha in enumerate(alpha_range):
-    for j,beta in enumerate(beta_range):
-        print(alpha,beta)
-        
-        kernel = lambda x,y : (1/x**alpha + 1/y**alpha) * 1/(-R**2*np.log(radius_0/R*((n_clusters*x)**beta+(n_clusters*y)**beta)) + R**2)
-        M = Coalescence(n_clusters = n_clusters,kernel = kernel)
+if not plot:
+    for i,alpha in enumerate(alpha_range):
+        for j,beta in enumerate(beta_range):
+            print(alpha,beta)
+            
+            kernel = lambda x,y : (1/x**alpha + 1/y**alpha) * 1/(-R**2*np.log(radius_0/R*((n_clusters*x)**beta+(n_clusters*y)**beta)) + R**2)
+            M = Coalescence(n_clusters = n_clusters,kernel = kernel)
+            save_path_ij = save_path + '_' + str(i) + '_' +str(j) + '/tmp'
+            if not os.path.exists(save_path_ij):
+                os.makedirs(save_path_ij)
+            save_name = save_path_ij + "/simtag_" +runtag 
+            M.run(n_samples = n_sample, init = monodisperse, save_name = save_name)
+else:
+    from compute_probas import probs
+    from concatenator import concatenate_sim
+    import matplotlib.pyplot as plt
 
-        save_name = save_path + '_' + str(i) + '_' +str(j)
-        M.run(n_samples = n_sample, init = monodisperse, save_name = save_name)
+    for i,alpha in enumerate(alpha_range):
+        plt.figure(dpi = 300)
+        plt.title(r"ML Branching probabability for $\alpha = %.2f , r_0 = %.3f$ \n and $N_0 = %s $"% (alpha,radius_0,n_clusters))
+        for j,beta in enumerate(beta_range):
+            save_path_ij = save_path + '_' + str(i) + '_' +str(j)
+            sample_sizes, sample_times = concatenate_sim(save_path_ij)
+            n_samples,n_clusters = sample_times.shape
+
+            time_range = np.linspace(0,np.max(sample_times[:,-1]),200)
+            print("Computing probas, parameters : alpha, beta =" + str((alpha,beta)))
+            print("Number of samples :"+str(n_samples))
+
+            print(len(np.where(sample_sizes[-1,:,:] > 0)[0])/n_samples)
+            probies = probs(sample_sizes,sample_times,time_range,2,0.3)
+
+            #plt.figure(dpi = 300)
+            #plt.title('ML Branching probabability for alpha = '+str(alpha)+', beta ='+str(beta))
+            plt.plot(time_range,probies, label = r"$\beta = %.2f $"%(beta))
+        plt.legend()
+        plt.savefig(fig_path+file_name+'_'+str(i)+'_fig.png')

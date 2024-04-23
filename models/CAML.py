@@ -1,11 +1,34 @@
 import numpy as np
+from scipy.special import gamma
+from time import time
+#%% core functions
 
 
+def lambda_alpha(n_clusters,k,alpha,assymp = 20):
+    p1 = k
+    var2 = k*(1 + alpha)
+    if var2 < assymp:
+        p2 = gamma(var2)/gamma(var2 - 1 - alpha)
+    else:
+        p2 = (var2 -1)**(1 + alpha) 
+    var3 = n_clusters + k*alpha
+    if var3 < assymp:
+        p3 = n_clusters**alpha * gamma(var3 - alpha)/gamma(var3)
+    else:
+        p3 = (n_clusters/(var3))**alpha
+    return p1 * p2 * p3
+
+def compute_lambdas(n_clusters,alpha):
+    res = np.zeros([n_clusters-1])
+    for k in range(n_clusters,1,-1):
+            res[n_clusters - k] = lambda_alpha(n_clusters,k,alpha,assymp = 20)
+    return res
 
 class CAML:
-    def __init__(self,n_clusters,kernel):
+    def __init__(self,n_clusters,alpha):
+        """ alpha is the parameter in the kernel $K_\alpha$"""
         self.n_clusters = n_clusters
-        self.kernel = np.vectorize(kernel)
+        self.alpha = alpha
         
         self.active_nodes = None
         self.current_sizes = None
@@ -13,24 +36,7 @@ class CAML:
         
         self.sample_sizes = None
         self.sample_times = None
-        
-    def update(self):
-        array = self.current_sizes[self.active_nodes]
-        kernels,triu_indices = apply_to_couples(array,self.kernel)
-        sum_kernels = np.sum(kernels)
-        probabilities = kernels/sum_kernels
-        
-        self.current_times = self.current_times + np.random.exponential(1/sum_kernels)
-        
-        len_array = triu_indices[0].size
-        ind_couple = np.random.choice(len_array,p = probabilities)
-        i, j = triu_indices[0][ind_couple], triu_indices[1][ind_couple]
-        
-        array[i] = array[i] + array[j]
-        array[j] = 0
-        self.current_sizes[self.active_nodes] = array
-        self.active_nodes.pop(j)
-
+        self.lambdas = compute_lambdas(n_clusters, alpha)
 
     def run(self,n_samples,init = None,save_name = None):
         
@@ -38,24 +44,27 @@ class CAML:
         self.sample_times = np.zeros([n_samples,self.n_clusters])
         
         t0 = time()
-        for idi in range(n_samples):
-            try: 
-                init.shape
-                self.current_sizes = init.copy()
-            except:
-                 self.current_sizes = np.ones([self.n_clusters])
-            self.active_nodes = list(range(self.n_clusters))
-            self.current_times = 0
-            
-            self.sample_sizes[idi,0,:] = self.current_sizes
-            self.sample_times[idi,0] = self.current_times
-            for k in range(self.n_clusters-1):
-                self.update()
-                self.sample_sizes[idi,k+1,:] = self.current_sizes
-                self.sample_times[idi,k+1] = self.current_times
 
-            print('\r',   'Advancement : %.1f'%(((idi+1)/n_samples)*100)+' %', 'done in %.2fs.' % (time() - t0),end='')
-        print("End")
+        sample_single_times = np.random.exponential(np.tile(1/self.lambdas,(n_samples,1))).reshape(n_samples,self.n_clusters -1)
+        sample_times = np.cumsum(sample_single_times, axis = 1)
+        sample_times = np.concatenate((np.zeros([n_samples,1]),sample_times),axis = 1)
+        #print(sample_times.shape)
+
+        for k in range(self.n_clusters,1,-1):
+            array_alpha = (1 + self.alpha) * np.ones([k])
+            sample_sizes_k = np.random.dirichlet(array_alpha,size = (n_samples))
+            # if k < self.n_clusters:
+            #     print(sample_sizes_k.shape)
+            #     print(np.zeros([n_samples,self.n_clusters - k]).shape)
+            sample_sizes_k = np.concatenate((sample_sizes_k,np.zeros([n_samples,self.n_clusters - k])),axis = 1)
+            self.sample_sizes[:,self.n_clusters - k,:] = sample_sizes_k
+
+
+        #self.sample_sizes = sample_sizes
+        self.sample_times = sample_times
+
+        print('done in %.2fs.' % (time() - t0))
+        #print("End")
         print("Saving samples")
         if save_name:
             try:

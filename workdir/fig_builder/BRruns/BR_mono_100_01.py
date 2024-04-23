@@ -26,7 +26,6 @@ save_path = '../../results/'+file_name+'/'
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-#save_path = save_path +runtag
 #Parameters
 
 n_clusters = 100

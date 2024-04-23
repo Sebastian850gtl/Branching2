@@ -40,7 +40,7 @@ Ntmax = np.inf
 sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
 
 #M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-tol = 1e-8
+tol = 1/30
 radius_range = np.linspace(0,0.1,5)
 # Simulation
 

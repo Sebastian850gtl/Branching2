@@ -385,8 +385,6 @@ def sample_WF(t,a,b):
     #print(t)
     #M = sample_infinite_descent(t,tol = tol)
     M = np.vectorize(sampleA_infinte)(t)
-    if M[0] < 0:
-        print(M)
     Y = np.random.beta(a,b+M)
     return Y.reshape(-1)
 
@@ -414,7 +412,7 @@ def sample_exactBr(start,dt):
     #print(np.sum(res**2)/size)
     return res
 
-def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.001):
+def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.004):
     """ Samples the brownian increment sigmas = [n_samples,n_clusters]
         Switch is in time"""
     n_clusters,_ = array.shape

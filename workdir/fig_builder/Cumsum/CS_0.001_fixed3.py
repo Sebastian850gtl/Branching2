@@ -75,7 +75,7 @@ else:
     # Plots
     # Simus with different Rslow
     R = 1
-    Ttheoric = (-np.log(r/R) +3*np.log(2) -3/2 )* 1/(sigma1**2/2 + sigma2**2/2)
+    Ttheoric = (-np.log(2*r/R) +3*np.log(2) -3/2 )* 1/(sigma1**2/2 + sigma2**2/2)
 
     plt.figure(dpi = 300)
     for n in [2,4,6,10,20]:
@@ -85,6 +85,7 @@ else:
 
         # Concatenate simulations from different runs and load results
         sample_sizes, sample_times = concatenate_sim(save_path_n)
+        #sample_times = sample_times[25000:,:]
         n_sample,_ = sample_times.shape
         cum_n_sample = np.arange(1,n_sample+1)
 

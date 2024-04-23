@@ -46,7 +46,7 @@ radiusf = lambda x : radius
 
 if not plot:
     # Simulation
-    tol = 1e-12
+    tol = 1/10
 
     diffusion_range = np.arange(11)/5
     for i,D2 in enumerate(diffusion_range):
