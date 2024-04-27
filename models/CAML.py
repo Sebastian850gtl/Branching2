@@ -16,7 +16,7 @@ def lambda_alpha(n_clusters,k,alpha,assymp = 20):
         p3 = n_clusters**alpha * gamma(var3 - alpha)/gamma(var3)
     else:
         p3 = (n_clusters/(var3))**alpha
-    return p1 * p2 * p3
+    return 1/2 * p1 * p2 * p3
 
 def compute_lambdas(n_clusters,alpha):
     res = np.zeros([n_clusters-1])
@@ -50,7 +50,7 @@ class CAML:
         sample_times = np.concatenate((np.zeros([n_samples,1]),sample_times),axis = 1)
         #print(sample_times.shape)
 
-        for k in range(self.n_clusters,1,-1):
+        for k in range(self.n_clusters,0,-1):
             array_alpha = (1 + self.alpha) * np.ones([k])
             sample_sizes_k = np.random.dirichlet(array_alpha,size = (n_samples))
             # if k < self.n_clusters:

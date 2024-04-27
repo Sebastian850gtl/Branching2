@@ -352,7 +352,7 @@ def sampleA_infinite_normal(t):
     eta = beta/(np.exp(beta) - 1)
     mu = 2*eta/t
     sigma_sample_inf = np.sqrt(mu* (1 + eta/(eta + beta) - 2*eta))*(eta + beta)/beta
-    return int(mu + sigma_sample_inf*np.random.randn()) + 1
+    return int(mu + sigma_sample_inf*np.random.randn()) 
 
 def sampleA_infinte(t):
     if t >= 0.1:

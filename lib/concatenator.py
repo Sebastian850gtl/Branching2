@@ -38,8 +38,16 @@ def concatenate_sim(results_path):
                 #print(" Number fo samples %s,"%(n_samples))
         n_samples,_ = sample_times.shape
         print(" Number of final samples %s,"%(n_samples))
-        np.save(results_path +'/_sizes.npy',sample_sizes)
-        np.save(results_path +'/_times.npy',sample_times)
+        try:
+            sample_sizes_prev = np.load(results_path +'/_sizes.npy')
+            sample_times_prev = np.load(results_path +'/_times.npy')
+            sample_sizes = np.concatenate((sample_sizes_prev,sample_sizes),axis = 0)
+            sample_times = np.concatenate((sample_times_prev,sample_times),axis = 0)
+            np.save(results_path +'/_sizes.npy',sample_sizes)
+            np.save(results_path +'/_times.npy',sample_times)
+        except:
+            np.save(results_path +'/_sizes.npy',sample_sizes)
+            np.save(results_path +'/_times.npy',sample_times)
         print("Deleting temporary file")
         for file in list_of_directories:
             filename = os.fsdecode(file)

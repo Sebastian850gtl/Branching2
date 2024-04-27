@@ -33,7 +33,7 @@ if not os.path.exists(save_path):
 
 
 #Parameters
-r1 = 0.001 # rayon d'un cluster de taille 1
+r1 = 0 # rayon d'un cluster de taille 1
 sigma1 = 1
 sigma2 = 0
 n_clusters = 2
@@ -43,7 +43,7 @@ sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
 
 #M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 tol = 1/30
-radius_range = np.linspace(0,0.1,5)
+radius_range = np.linspace(0.0001,0.1,5)
 # Simulation
 
 if not plot:
@@ -62,7 +62,7 @@ else:
     from concatenator import concatenate_sim
     import matplotlib.pyplot as plt
     # Plots
-    radius_range = np.linspace(0,0.1,5)
+    radius_range = np.linspace(0.0001,0.1,5)
     meanTs = []
     for i,r2 in enumerate(radius_range):
         save_path_i = save_path +save_path +"radius_"+ str(i)

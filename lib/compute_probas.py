@@ -39,7 +39,7 @@ def probs(sample_sizes,sample_times,times,k,x):
     
     ind_Tt = state(sample_times,times)
     n_times = len(times)
-    n_samples,n_clusters = sample_times.shape
+    n_samples,_ = sample_times.shape
     #UUt = np.zeros([n_samples,n_times,n])
     sample_indices = np.arange(n_samples)
     P = []

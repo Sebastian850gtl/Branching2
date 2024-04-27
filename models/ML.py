@@ -58,8 +58,10 @@ class Coalescence:
         t0 = time()
         for idi in range(n_samples):
             try: 
-                init.shape
-                self.current_sizes = init.copy()
+                if init.ndim == 1:
+                    self.current_sizes = init.copy()
+                elif init.ndim == 2:
+                     self.current_sizes = init[idi,:].copy()
             except:
                  self.current_sizes = np.ones([self.n_clusters])
             self.active_nodes = list(range(self.n_clusters))

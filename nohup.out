@@ -14,3 +14,18 @@ Start of the run number of samples : 5000
   File "/usr/lib/python3/dist-packages/numpy/lib/function_base.py", line 2161, in _vectorize_call
     ufunc, otypes = self._get_ufunc_and_otypes(func=func, args=args)
 KeyboardInterrupt
+0 0
+Start of the run number of samples : 1
+Traceback (most recent call last):
+  File "workdir/runs/BRruns/BR_mono_100_01.py", line 58, in <module>
+    M.run(Ntmax = Ntmax,tol = tol,
+  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 551, in run
+    self._update_(tol)
+  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 472, in _update_
+    dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,radiuses,sigmas)
+  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 103, in compute_cross_radius_cross_sigmas_squares_dist
+    cross_x, cross_y, cross_z = apply_to_couples_diffv2(x,triu_indices), apply_to_couples_diffv2(y,triu_indices), apply_to_couples_diffv2(z,triu_indices)
+  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 94, in apply_to_couples_diffv2
+    darr21 = np.apply_along_axis(auxu,axis = 0,arr = darr1)[triu_indices]
+  File "<__array_function__ internals>", line 5, in apply_along_axis
+KeyboardInterrupt

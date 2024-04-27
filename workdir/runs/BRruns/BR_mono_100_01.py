@@ -22,7 +22,9 @@ n_sample = int(samples)
 #Files locations
 
 save_path = '../../results/'+file_name+'/'
-
+fig_path = '../../results/fig/'
+if not os.path.exists(fig_path):
+    os.makedirs(fig_path)
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
@@ -32,23 +34,21 @@ n_clusters = 100
 Ntmax = np.inf
 radius_0 = 0.01 # radius of a cluster that has mass 1/N0
 D0 = 1
+# Parameters of time step scaling
+tol = 1/10
 
+# range of paramters for the radius and diffusion function
+alpha_range = [0,1/3,2/3,1]
+beta_range = [0,1/2] 
+# Initial distribution
+
+monodisperse = np.ones([n_clusters])/n_clusters
 if not plot:
-    # Parameters of time step scaling
-    tol = 1/10
-
-    # range of paramters for the radius and diffusion function
-    alpha_range = [0,1/3,2/3,1]
-    beta_range = [0,1/3,1/2,1] 
-    # Initial distribution
-
-    monodisperse = np.ones([n_clusters])/n_clusters
-    # Simulation
     for i,alpha in enumerate(alpha_range):
         for j,beta in enumerate(beta_range):
             print(alpha,beta)
             radiusf = lambda x : radius_0 * (n_clusters*x)**(beta)
-            sigmaf = lambda x : np.sqrt(2*D0*n_clusters*x**(-alpha))
+            sigmaf = lambda x : np.sqrt(2*D0*(n_clusters*x)**(-alpha))
             
             M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
             save_path_n = save_path +"alpha_beta_"+  str(i) + '_' +str(j)+'/tmp'
@@ -62,34 +62,14 @@ else:
 
     import matplotlib.pyplot as plt
     from compute_probas import probs
-
-    file_name = sys.argv[1]
-
-    save_path = '../../results/'+file_name+'/'
-    fig_path = '../../results/fig/'
-    if not os.path.exists(fig_path):
-        os.makedirs(fig_path)
-    # Parameters change depending of which file of results you are using.
-    n_clusters = 100
-    Ntmax = np.inf
-    radius_0 = 0.01 # radius of a cluster that has mass 1/N0
-    D0 = 1
-
-    # Parameters of time step scaling
-    tol = 1e-4
-
-    # range of paramters for the radius and diffusion function
-    alpha_range = [0,1/3,2/3,1]
-    beta_range = [0,1/3,1/2,1] 
-    # Initial distribution
+    from concatenator import concatenate_sim
 
     for i,alpha in enumerate(alpha_range):
         plt.figure(dpi = 300)
         plt.title(r"ML Branching probabability for $\alpha = %.2f , r_0 = %.3f$ \n and $N_0 = %s $"% (alpha,radius_0,n_clusters))
         for j,beta in enumerate(beta_range):
             save_path_n = save_path +"alpha_beta_"+  str(i) + '_' +str(j)
-            sample_times =  np.load(save_path_n+'_times.npy')
-            sample_sizes =  np.load(save_path_n+'_sizes.npy')
+            sample_sizes, sample_times = concatenate_sim(save_path_n)
             n_samples,n_clusters = sample_times.shape
 
             time_range = np.linspace(0,np.max(sample_times[:,-1]),200)
