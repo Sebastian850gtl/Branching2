@@ -39,7 +39,14 @@ class CAML:
         self.lambdas = compute_lambdas(n_clusters, alpha)
 
     def run(self,n_samples,init = None,save_name = None):
-        
+        """  Runs the model
+        Arguments:
+            n_samples : Number  of sammples
+            save__name : File name where to save results 
+        Results saved as npy file:
+            _times : numpy ndarray shape = (n_samples,n_clusters) ; For each sample gives all the collision times, the first column is zeros since there is n_clusters-1 collisions.
+            _sizes : numpy ndarray shape = (n_samples,n_clusters,n_clusters); For T =  _times[i,j] the time at sample  i and collision j, _sizes[i,j,:]  is the cluster distribution at sample  i and collision number j.
+        """
         self.sample_sizes = np.zeros([n_samples,self.n_clusters,self.n_clusters])
         self.sample_times = np.zeros([n_samples,self.n_clusters])
         

@@ -16,7 +16,6 @@ from CAML import CAML
 
 runtag = sys.argv[1]  # Simulation tag
 samples = int(sys.argv[2]) # Number of samples used only if runvar == 1
-plot = bool(int(sys.argv[3]))
 
 np.random.seed(int(runtag))
 n_sample = samples
