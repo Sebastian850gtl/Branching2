@@ -37,7 +37,7 @@ sigma2 = 0
 n_clusters = 2
 Ntmax = np.inf
 
-sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x>1)
+sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x>=2)
 radiusf = lambda x : r
 
 M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
@@ -46,7 +46,7 @@ M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 # simulation
 if not plot:
     M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-    for n in [10,20,30]:
+    for n in [10,20,30,40]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)+'/tmp'
         if not os.path.exists(save_path_n):
@@ -75,10 +75,11 @@ else:
     # Plots
     # Simus with different Rslow
     R = 1
-    Ttheoric = (-np.log(2*r/R) +3*np.log(2) -3/2 )* 1/(sigma1**2/2 + sigma2**2/2)
+    Ttheoric = (-np.log(2*r/R) +np.log(2))* R**2/(sigma1**2/2 + sigma2**2/2)
 
     plt.figure(dpi = 300)
-    for n in [10,20,30]:
+    plt.xlabel("Number of samples")
+    for n in [10,20,30,40]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)
         
@@ -90,11 +91,11 @@ else:
         cum_n_sample = np.arange(1,n_sample+1)
 
         cumsum_times = np.cumsum(sample_times[:,-1])/cum_n_sample
-        print("tol = 10^{-%s}, T  = %.2f" %(n,cumsum_times[-1]))
+        print("epsilon = 1/%s, T  = %.2f" %(n,cumsum_times[-1]))
 
         start = 5
-        plt.plot(cum_n_sample[start:],cumsum_times[start:],label = r"tol $= (%s)^{-1}, T  = %.2f$" %(n,np.mean(sample_times[:,-1])))
-    plt.plot(cum_n_sample,Ttheoric*np.ones([n_sample]),label = r"Theoric time $T = %.2f$"%(Ttheoric))
+        plt.plot(cum_n_sample[start:],cumsum_times[start:],label = r" $\varepsilon = {%s}^{-1}, \hat{\tau_{AB}}  = %.3f$" %(n,np.mean(sample_times[:,-1])))
+    plt.plot(cum_n_sample,Ttheoric*np.ones([n_sample]),label = r"Theoric time $\mathbb{E}\left[\tau_{AB}\right] = %.3f$"%(Ttheoric))
     plt.legend()
     plt.savefig(fig_path+file_name+'_fig.png')
 

@@ -75,12 +75,12 @@ else:
         meanTs.append(Tmean)
     meanTs = np.array(meanTs)
 
-    f = lambda x : (-np.log(r1 + x) + 3*np.log(2) - 3/2)* 2/(sigma1**2 + sigma2**2)
+    f = lambda x : (-np.log(r1 + x) + np.log(2) )* 2/(sigma1**2 + sigma2**2)
     radius_linspace = np.linspace(radius_range[0],radius_range[-1],200)
 
     plt.figure(dpi = 300)
-    plt.plot(radius_linspace,f(radius_linspace),label = r'$r_B \mapsto \dfrac{-\log\left(\dfrac{r_A + r_B}{R}\right) + 3\log(2) - \dfrac{3}{2}}{D_B + D_A}$',color = 'darkorange')
-    plt.scatter(radius_range,meanTs,label = r'$\mathbb{E}[\hat{T}]$',color = 'blue')
+    plt.plot(radius_linspace,f(radius_linspace),label = r'$r_B \mapsto \dfrac{-\log\left(\dfrac{r_A + r_B}{R}\right) + \log(2) }{D_B + D_A}$',color = 'darkorange')
+    plt.scatter(radius_range,meanTs,label = r'$\hat{T}$',color = 'blue')
     plt.legend()
     plt.ylabel("Time")
     plt.xlabel(r"$r_B$")
