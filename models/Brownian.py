@@ -200,28 +200,31 @@ class Modelv3:
             pass
 
         if len(self.active)> 1:
+            # Second step we adapt the time step to the new relative poistions
             X = self.current_position[self.active,:] # varaible for updating active clusters positionsize = self.current_sizes[self.active]
-            newsizes = self.current_sizes[self.active]
-            sigmas = self.sigf(newsizes)
-            radiuses = self.radiusf(newsizes)
+            size = self.current_sizes[self.active].copy()
+            sigmas = self.sigf(size)
+            radiuses = self.radiusf(size)
             # Collection of arrays giving for each distinct couples (1,2) : |Z_1 - Z_2|, r1 + r2, sigma1^2 + sigma2^2 
             dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,radiuses,sigmas)
-            # Second step we adapt the time step to the new relative poistions
+
             self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
 
-            # Third and final step, we update the positions of each clusters
-            U = reflected_brownian_sphere(X,sigmas,self.dt,radiuses)
+            # updating position
+            U = reflected_brownian_sphere_old(X,sigmas,self.dt,radiuses)
             self.current_position[self.active,:] = U
             self.times[self.active] += self.dt #update the clocks of all active clusters 
         else:
             pass
-
         return None
         
     
     def _adapt_dt_(self,tol,cross_sigmas_squares,dist,cross_radiuses):
         """ Function adapting the time step to the current realtive cluster positions"""
         dt = np.min(((dist)**2/(2*cross_sigmas_squares)))* tol
+        
+        if np.isnan(dt):
+            print('===================================')
         self.dt = dt
         return None
         

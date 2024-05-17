@@ -54,6 +54,7 @@ for i,alpha in enumerate(alpha_range):
     save_path_i_ML = save_path_ML + 'ML_' + str(i) 
     sample_sizes_ML, sample_times_ML = concatenate_sim(save_path_i_ML)
     n_samples,n_clusters = sample_times_ML.shape
+
     time_range = np.linspace(0,3*np.mean(sample_times_ML[:,-1]),200)
     probies = probs(sample_sizes_ML,sample_times_ML,time_range,k,x)
     plt.plot(time_range,probies, label = r"ML")
