@@ -35,7 +35,7 @@ Ntmax = np.inf
 radius_0 = 0.01 # radius of a cluster that has mass 1/N0
 D0 = 1
 # Parameters of time step scaling
-tol = 1/10
+tol = 1/30
 
 # range of paramters for the radius and diffusion function
 alpha_range = [0,1/3,2/3,1]

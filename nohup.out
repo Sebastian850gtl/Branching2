@@ -1,31 +1,0 @@
- Simulation of CS_0.01_fixedv3, simulation tag : 1
- Note that the tag serves also as a seed
-keq =5.411894431054339
-Start of the run number of samples : 5000
- Advancement : 0.0 % done in 0.10s. Advancement : 0.0 % done in 0.11s. Advancement : 0.1 % done in 0.14s. Advancement : 0.1 % done in 0.18s. Advancement : 0.1 % done in 0.22s. Advancement : 0.1 % done in 0.53s. Advancement : 0.1 % done in 0.64s. Advancement : 0.2 % done in 0.82s. Advancement : 0.2 % done in 1.05s. Advancement : 0.2 % done in 1.09s. Advancement : 0.2 % done in 1.11s. Advancement : 0.2 % done in 1.15s. Advancement : 0.3 % done in 1.24s. Advancement : 0.3 % done in 1.40s. Advancement : 0.3 % done in 1.57s.Traceback (most recent call last):
-  File "workdir/runs/Cumsum/CS_0.01_fixedv3.py", line 53, in <module>
-    M.run(Ntmax = Ntmax,tol = 10**(-n),
-  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 442, in run
-    self._update_(tol)
-  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 389, in _update_
-    sigmas = self.sigf(newsizes)
-  File "/usr/lib/python3/dist-packages/numpy/lib/function_base.py", line 2091, in __call__
-    return self._vectorize_call(func=func, args=vargs)
-  File "/usr/lib/python3/dist-packages/numpy/lib/function_base.py", line 2161, in _vectorize_call
-    ufunc, otypes = self._get_ufunc_and_otypes(func=func, args=args)
-KeyboardInterrupt
-0 0
-Start of the run number of samples : 1
-Traceback (most recent call last):
-  File "workdir/runs/BRruns/BR_mono_100_01.py", line 58, in <module>
-    M.run(Ntmax = Ntmax,tol = tol,
-  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 551, in run
-    self._update_(tol)
-  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 472, in _update_
-    dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,radiuses,sigmas)
-  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 103, in compute_cross_radius_cross_sigmas_squares_dist
-    cross_x, cross_y, cross_z = apply_to_couples_diffv2(x,triu_indices), apply_to_couples_diffv2(y,triu_indices), apply_to_couples_diffv2(z,triu_indices)
-  File "/home/sbaudelet/Documents/Branching2/workdir/../models/Brownian.py", line 94, in apply_to_couples_diffv2
-    darr21 = np.apply_along_axis(auxu,axis = 0,arr = darr1)[triu_indices]
-  File "<__array_function__ internals>", line 5, in apply_along_axis
-KeyboardInterrupt

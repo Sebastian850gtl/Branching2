@@ -45,9 +45,9 @@ radiusf = lambda x : radius
 
 if not plot:
     # Simulation
-    tol = 1/10
+    tol = 1/20
 
-    diffusion_range = np.arange(11)/5
+    diffusion_range = np.arange(7,11)/5
     for i,D2 in enumerate(diffusion_range):
         sigma2 = np.sqrt(2*D2)
         sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
@@ -69,7 +69,7 @@ else:
 
     D1 = sigma1**2/2
     R = 1
-    f = lambda x : R**2 *(-np.log(2*radius/R) +3*np.log(2) -3/2 )/(x + D1) 
+    f = lambda x : R**2 *(-np.log(2*radius/R) +np.log(2) )/(x + D1) 
 
 
     diff_linspace = np.linspace(diffusion_range[0],diffusion_range[-1]*1.05,200)
@@ -91,8 +91,8 @@ else:
 
     plt.figure(dpi = 300)
     #plt.title('MFPT of 2 Brownian spheres of radius r = '+str(radius)+' with varrying diffusion coef \n on the semi-sphere with reflective boundary conditions.')
-    plt.plot(diff_linspace,f(diff_linspace),label = r'$D_B \mapsto \dfrac{-\log\left(\dfrac{r_A + r_B}{R}\right) + 3\log(2) - \dfrac{3}{2}}{D_B + D_A}$',color = 'darkorange')
-    plt.scatter(diff_range_plot,meanTs,label = r'$\mathbb{E}[\hat{T}]$',color = 'blue')
+    plt.plot(diff_linspace,f(diff_linspace),label = r'$D_B \mapsto \dfrac{-\log\left(\dfrac{r_A + r_B}{R}\right) + \log(2) }{D_B + D_A}$',color = 'darkorange')
+    plt.scatter(diff_range_plot,meanTs,label = r'$\hat{T}$',color = 'blue')
     plt.legend()
     plt.ylabel("Time")
     plt.xlabel(r"$D_B$")
