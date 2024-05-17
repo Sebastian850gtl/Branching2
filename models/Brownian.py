@@ -171,7 +171,7 @@ class Modelv3:
         
         # We set the usefull varaibles
         X = self.current_position[self.active,:] # varaible for updating active clusters positionsize = self.current_sizes[self.active]
-        size = self.current_sizes[self.active].copy()
+        size = self.current_sizes[self.active]
         sigmas = self.sigf(size)
         radiuses = self.radiusf(size)
         # Collection of arrays giving for each distinct couples (1,2) : |Z_1 - Z_2|, r1 + r2, sigma1^2 + sigma2^2 
