@@ -53,7 +53,7 @@ def tangent(array,dB2D):
     # a 2D Brownian increment in the Affine plan of parameters (ker(A),array)
     return np.einsum('nij,nj -> ni',rotation_matrix,dB2D) + array
 
-def uniform_init(Npoints,radius0):
+def uniform_init(Npoints):
     """ Uniform repartition of polarisome proteins on the tip geometry"""
     #Z = np.random.rand(Npoints)*(1-radius0) + radius0
     Z = np.random.rand(Npoints)
@@ -61,13 +61,13 @@ def uniform_init(Npoints,radius0):
     phi = -np.pi + 2*np.pi*np.random.rand(Npoints)
     return np.stack(spherical_to_cartesian(theta,phi),axis = 1)
 
-def boundary(array,radiuses):
+def boundary(array):
     """ Treats the Boundary condition of points array that went out of the boundary"""
     z = array[:,2]# - radiuses
     ind = np.where(z<0)
     array[ind,2] =  - array[ind,2] #+ 2*radiuses[ind]
 
-def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.004):
+def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.005):
     """ """
     n_clusters,_ = array.shape
     dtsigmas = dt*sigmas**2
@@ -85,7 +85,7 @@ def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.004):
     res[itangent] = U
     if len(iexact[0])>0:
         res[iexact] = sample_exactBr(array_exact,dtsigmas[iexact])
-    boundary(res,radiuses)
+    boundary(res)
     return res
 
         
@@ -99,15 +99,20 @@ def auxu(arr):
 
 def apply_to_couples_sumv2(arr,triu_indices):
     """ For arr =[a1,a2,a3] returns the array [a1 + a2, a1 + a3, a2 + a3]"""
-    arr1 = np.apply_along_axis(auxu,axis = 0,arr = arr)[triu_indices]
-    arr2 = np.apply_along_axis(auxl,axis = 0,arr = arr)[triu_indices]
+    #arr1 = np.apply_along_axis(auxu,axis = 0,arr = arr)[triu_indices]
+    #arr2 = np.apply_along_axis(auxl,axis = 0,arr = arr)[triu_indices]
+    arr1 = np.tril(arr,k = -1).T[triu_indices]
+    arr2 = np.triu(arr,k = 1)[triu_indices]
     return arr1 + arr2
 
 def apply_to_couples_diffv2(arr,triu_indices):
     """ For arr =[a1,a2,a3] returns the array [a1 - a2, a1 - a3, a2 - a3]"""
-    arr1 = np.apply_along_axis(auxu,axis = 0,arr = arr)[triu_indices]
-    arr2 = np.apply_along_axis(auxl,axis = 0,arr = arr)[triu_indices]
+    #arr1 = np.apply_along_axis(auxu,axis = 0,arr = arr)[triu_indices]
+    #arr2 = np.apply_along_axis(auxl,axis = 0,arr = arr)[triu_indices]
+    arr1 = np.tril(arr,k = -1).T[triu_indices]
+    arr2 = np.triu(arr,k = 1)[triu_indices]
     return arr1 - arr2
+
 
 def compute_cross_radius_cross_sigmas_squares_dist(array,radiuses,sigmas):
     """ Arguments:
@@ -147,6 +152,10 @@ class Modelv3:
         self.sigf = np.vectorize(sigmafun) 
         self.radiusf = np.vectorize(radfun)
         
+        self.active_sizes = None
+        self.active_sigmas = None
+        self.active_radiuses = None
+        
         self.dt = 0 # Adaptative time step
 
         self.times = None # shape = n_clusters
@@ -168,15 +177,9 @@ class Modelv3:
         Arguments:
             tol : The tolerance paramter  for estimating the probability of  missing a collision    
         """
-        
-        # We set the usefull varaibles
-        X = self.current_position[self.active,:] # varaible for updating active clusters positionsize = self.current_sizes[self.active]
-        size = self.current_sizes[self.active]
-        sigmas = self.sigf(size)
-        radiuses = self.radiusf(size)
-        size = size.copy()
         # Collection of arrays giving for each distinct couples (1,2) : |Z_1 - Z_2|, r1 + r2, sigma1^2 + sigma2^2 
-        dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,radiuses,sigmas)
+        X = self.current_position[self.active,:]
+        dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,self.active_radiuses,self.active_sigmas)
         # First step we test if there is any contact at the current step
         
         contact_indices_glob = np.where(dist < cross_radiuses) # The indices in the list of all couple
@@ -187,6 +190,7 @@ class Modelv3:
             # the n colliding masses. This treatment is done below: The loop is iterating thgrough an adjacence matrix where adjacent nodes are
             # the indices of colliding clusters.
         if len(contact_indices_i) > 0:
+            size = self.active_sizes.copy()
             for i,j in zip(contact_indices_i,contac_indices_j):
                 size[j] = size[i] + size[j]
                 size[i] = 0
@@ -196,22 +200,23 @@ class Modelv3:
                 self.active.pop(i-ki) # We have to substract ki because the list self.active looses 1 element at each iteration.
 
             self.sizes[self.active,:] = np.tile(self.current_sizes,(len(self.active),1))
+        
+            X = self.current_position[self.active,:]
+            self.active_sizes = self.current_sizes[self.active]
+            self.active_sigmas =  self.sigf(self.active_sizes)
+            self.active_radiuses =  self.radiusf(self.active_sizes)
+
+            dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,self.active_radiuses,self.active_sigmas)
         else:
             pass
 
+
         if len(self.active)> 1:
-            # Second step we adapt the time step to the new relative poistions
-            X = self.current_position[self.active,:] # varaible for updating active clusters positionsize = self.current_sizes[self.active]
-            size = self.current_sizes[self.active].copy()
-            sigmas = self.sigf(size)
-            radiuses = self.radiusf(size)
-            # Collection of arrays giving for each distinct couples (1,2) : |Z_1 - Z_2|, r1 + r2, sigma1^2 + sigma2^2 
-            dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,radiuses,sigmas)
 
             self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
 
             # updating position
-            U = reflected_brownian_sphere_old(X,sigmas,self.dt,radiuses)
+            U = reflected_brownian_sphere(X,self.active_sigmas,self.dt,self.active_radiuses)
             self.current_position[self.active,:] = U
             self.times[self.active] += self.dt #update the clocks of all active clusters 
         else:
@@ -255,8 +260,8 @@ class Modelv3:
                 self.current_sizes = size_init.copy()
             except:
                 self.current_sizes = np.ones([self.n_clusters])
-
-            radius0 = np.min(self.radiusf(self.current_sizes))
+            
+            
             if position_init == 'center':
                 Y0 = np.zeros([1,3])
                 Y0[0,2] = 1
@@ -264,11 +269,18 @@ class Modelv3:
             elif position_init:
                 self.current_position = position_init
             else:
-                self.current_position = uniform_init(self.n_clusters,radius0)
+                self.current_position = uniform_init(self.n_clusters)
             if save_trajectories:
                 self.trajectories = [self.current_position[self.active]]
             else:
                 pass
+
+            # Initializing active varaibles
+            # The active variables serve to store the values in memory instead of fetching them at each iteration.
+            
+            self.active_sizes = self.current_sizes
+            self.active_sigmas =  self.sigf(self.current_sizes)
+            self.active_radiuses =  self.radiusf(self.current_sizes)
             
             self.times = np.zeros([self.n_clusters])
             self.sizes = np.tile(self.current_sizes,(self.n_clusters,1))

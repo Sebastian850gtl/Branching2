@@ -26,9 +26,10 @@ save_path_ML = '../../results/ML_mono_100/'
 save_path_CAML = '../../results/CAML_100/'
 #Parameters
 #alpha_range = [0,1/3,2/3,1]
-alpha_range = [0,1/3]
+radius = 0.01
+alpha_range = [0,1/3,2/3,1]
 # Plots
-x = 0.3
+x = 0.45
 k = 2
 from compute_probas import probs
 from concatenator import concatenate_sim
@@ -45,7 +46,7 @@ for i,alpha in enumerate(alpha_range):
     n_samples,n_clusters = sample_times_BR.shape
     time_range_BR = np.linspace(0,3*np.mean(sample_times_BR[:,-1]),200)
 
-    time_range = 1/10*time_range_BR *(n_clusters)**(-alpha)/(-np.log(0.02) + np.log(2))
+    time_range = 2/(1+alpha)*time_range_BR *(n_clusters)**(-alpha)/(-np.log(2*radius) + np.log(2))
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
     plt.plot(time_range,probies, label = r"BR")
 
