@@ -29,7 +29,7 @@ save_path_CAML = '../../results/CAML_100/'
 radius = 0.01
 alpha_range = [0,1/3,2/3,1]
 # Plots
-x = 0.45
+x = 0.1
 k = 2
 from compute_probas import probs
 from concatenator import concatenate_sim

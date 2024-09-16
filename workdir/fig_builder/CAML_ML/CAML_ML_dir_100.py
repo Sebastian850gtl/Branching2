@@ -53,7 +53,9 @@ for i,alpha in enumerate(alpha_range):
     # CAML
     save_path_i_CAML = save_path_CAML + 'CAML_' + str(i) 
     sample_sizes_CAML, sample_times_CAML = concatenate_sim(save_path_i_CAML)
+    sample_sizes_CAML = sample_sizes_CAML[:n_samples,:,:]
     n_samples,n_clusters = sample_times_CAML.shape
+    sample_sizes_CAML = sample_sizes_ML[:n_samples,:]
     print("Computing probas for CAML, parameters : alpha =" + str((alpha)))
     print("Number of samples :"+str(n_samples))
     probies = probs(sample_sizes_CAML,sample_times_CAML,time_range,k,x)

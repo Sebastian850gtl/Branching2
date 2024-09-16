@@ -33,11 +33,8 @@ save_path = save_path
 #Parameters
 # ML run with parameters that relate to the Brownina run
 
-n_clusters = 100
+n_clusters = 40
 
-R = 1 # Complete radius of the sphere
-radius_0 = 0.01 # radius of a cluster that has mass 1/N0
-D0 = 1 # Diffusion coefficient that has mass 1/N0
 
 alpha_range = [0,1/3,2/3,1]
 beta_range = [0,1/3,1/2,1]
@@ -47,13 +44,12 @@ monodisperse = np.ones([n_clusters])/n_clusters
 # Simulation
 
 for i,alpha in enumerate(alpha_range):
-    for j,beta in enumerate(beta_range):
-        print(alpha,beta)
-        
-        kernel = lambda x,y : (1/x**alpha + 1/y**alpha) * 1/(-R**2*np.log(radius_0/R*((n_clusters*x)**beta+(n_clusters*y)**beta)) + R**2)
-        M = Coalescence(n_clusters = n_clusters,kernel = kernel)
-        save_path_ij = save_path + '_' + str(i) + '_' +str(j) + '/tmp'
-        if not os.path.exists(save_path_ij):
-            os.makedirs(save_path_ij)
-        save_name = save_path_ij + "/simtag_" +runtag 
-        M.run(n_samples = n_sample, init = monodisperse, save_name = save_name)
+    print("Running ML")
+
+    kernel = lambda x,y : (1/x**alpha + 1/y**alpha) 
+    M = Coalescence(n_clusters = n_clusters,kernel = kernel)
+    save_path_i_ML = save_path + 'ML_' + str(i) + '/tmp'
+    if not os.path.exists(save_path_i_ML):
+        os.makedirs(save_path_i_ML)
+    save_name = save_path_i_ML + "/simtag_" +runtag 
+    M.run(n_samples = n_sample, init = monodisperse, save_name = save_name)
