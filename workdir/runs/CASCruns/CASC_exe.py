@@ -1,5 +1,5 @@
 import os,sys
-
+import importlib
 file_name =  os.path.splitext(os.path.basename(sys.argv[0]))[0]
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -13,14 +13,13 @@ sys.path.append('../lib')
 import numpy as np
 from CAML import CAML
 
-runtag = sys.argv[1]  # Simulation tag
-samples = int(sys.argv[2]) # Number of samples used only if runvar == 1
+parameters_file = sys.argv[1]
+runtag = sys.argv[2]  # Simulation tag
 
 np.random.seed(int(runtag))
-n_sample = samples
 #Files locations
 
-save_path = '../../results/'+file_name+'/'
+save_path = '../../results/'+parameters_file+'/'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -31,10 +30,13 @@ if not os.path.exists(fig_path):
 
 save_path = save_path
 #Parameters
-n_clusters = 40
-alpha_range = [0,1/3,2/3,1]
+
+param_module = importlib.import_module(parameters_file)
+n_samples = param_module.n_samples
+n_clusters = param_module.n_clusters
+alpha_range =  param_module.alpha_range
 # Initial distribution 
-monodisperse = np.ones([n_clusters])/n_clusters
+init_clusters = param_module.init_clusters
 
 # Simulation
 for i,alpha in enumerate(alpha_range):
@@ -43,4 +45,4 @@ for i,alpha in enumerate(alpha_range):
     if not os.path.exists(save_path_i_CAML):
         os.makedirs(save_path_i_CAML)
     save_name = save_path_i_CAML + "/simtag_" +runtag 
-    M2.run(n_samples = n_sample, init = monodisperse, save_name = save_name)
+    M2.run(n_samples = n_samples, init = init_clusters, save_name = save_name)

@@ -68,9 +68,9 @@ class Coalescence:
         t0 = time()
         for idi in range(n_samples):
             try: 
-                if init.ndim == 1:
+                if init.ndim == 1: # Handles the initialization passed as a single vector for a deterministic initial value.
                     self.current_sizes = init.copy()
-                elif init.ndim == 2:
+                elif init.ndim == 2: # Intialization is a sample of vectors (matrix n_samples x dim_vector) random initial value.
                      self.current_sizes = init[idi,:].copy()
             except:
                  self.current_sizes = np.ones([self.n_clusters])

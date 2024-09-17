@@ -14,20 +14,18 @@ import numpy as np
 from Brownian import Modelv3 as Model
 
 
-parameters = sys.argv[1] # parameters file
+parameters_file_name = sys.argv[1] # parameters file
 runtag = sys.argv[2]  # Simulation tag
-samples = sys.argv[3] # Number of samples 
 
 np.random.seed(int(runtag))
-n_sample = int(samples)
 
 #Import parameters
 
-param_module = importlib.import_module(parameters)
-
+param_module = importlib.import_module(parameters_file_name)
+n_samples = param_module.n_samples
 #Files locations
 
-save_path = '../../results/'+param_module.file_name+'/'
+save_path = '../../results/'+parameters_file_name+'/'
 fig_path = '../../results/fig/'
 if not os.path.exists(fig_path):
     os.makedirs(fig_path)
@@ -48,5 +46,5 @@ for i,alpha in enumerate(param_module.alpha_range):
             os.makedirs(save_path_n)
         save_name = save_path_n +"/simtag_" +runtag
         M.run(Ntmax = param_module.Ntmax,tol = param_module.tol,
-                n_samples = n_sample,save_name = save_name,stop = 1,size_init = param_module.init_clusters)
+                n_samples = n_samples,save_name = save_name,stop = 1,size_init = param_module.init_clusters)
         

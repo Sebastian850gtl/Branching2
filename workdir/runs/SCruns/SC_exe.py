@@ -1,5 +1,5 @@
 import os,sys
-
+import importlib
 file_name =  os.path.splitext(os.path.basename(sys.argv[0]))[0]
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -14,29 +14,29 @@ import numpy as np
 from ML import Coalescence
 from CAML import CAML
 
-runtag = sys.argv[1]  # Simulation tag
-samples = int(sys.argv[2]) # Number of samples used only if runvar == 1
+parameters_file_name = sys.argv[1]
+runtag = sys.argv[2]  # Simulation tag
 
 np.random.seed(int(runtag))
-n_sample = samples
+n_samples = samples
 #Files locations
 
-save_path = '../../results/'+file_name+'/'
+save_path = '../../results/'+parameters_file_name+'/'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-save_path = save_path
 #Parameters
-n_clusters = 100
-alpha_range = [0,1/3,2/3,1]
+param_module = importlib.import_module(parameters_file_name)
+n_samples = param_module.n_samples
+n_clusters = param_module.n_clusters
+alpha_range =  param_module.alpha_range
 # Initial distribution 
-
+init_clusters = param_module.init_clusters
 
 
 for i,alpha in enumerate(alpha_range):
-    init = np.random.dirichlet((1 + alpha)*np.ones([n_clusters]),size = n_sample)
-    init.reshape(n_sample,n_clusters)
+    init_clusters = init_clusters(alpha)
     print(" Running ML")
     kernel = lambda x,y : (1/x+ 1/y)**alpha
     M1 = Coalescence(n_clusters = n_clusters,kernel = kernel)
@@ -44,4 +44,4 @@ for i,alpha in enumerate(alpha_range):
     if not os.path.exists(save_path_i_ML):
         os.makedirs(save_path_i_ML)
     save_name = save_path_i_ML + "/simtag_" +runtag 
-    M1.run(n_samples = n_sample, init = init, save_name = save_name)
+    M1.run(n_samples = n_samples, init = init_clusters, save_name = save_name)

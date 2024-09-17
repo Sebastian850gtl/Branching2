@@ -1,11 +1,4 @@
 import numpy as np
-import os,sys
-file_name =  os.path.splitext(os.path.basename(sys.argv[0]))[0] #file_name is also a parameter that will serve to store results
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
-os.chdir('../..')
-wd = os.getcwd() # Defines the working directory
 
 #Parameters
 
@@ -24,4 +17,5 @@ beta_range = [0,1/2]
 init_clusters = np.ones([n_clusters])/n_clusters
 
 # Simulation parameters :
-n_samples = 8000
+n_samples = 1000
+n_runs = 20
