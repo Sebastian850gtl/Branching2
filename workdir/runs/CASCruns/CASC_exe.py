@@ -41,7 +41,7 @@ init_clusters = param_module.init_clusters
 # Simulation
 for i,alpha in enumerate(alpha_range):
     M2 = CAML(n_clusters = n_clusters,alpha = alpha)
-    save_path_i_CAML = save_path + 'CAML_' + str(i) + '/tmp'
+    save_path_i_CAML = save_path + 'alpha_%.3f/tmp'%(alpha)
     if not os.path.exists(save_path_i_CAML):
         os.makedirs(save_path_i_CAML)
     save_name = save_path_i_CAML + "/simtag_" +runtag 

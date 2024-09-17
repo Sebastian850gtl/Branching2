@@ -21,11 +21,11 @@ fig_path = '../../results/fig/'
 if not os.path.exists(fig_path):
     os.makedirs(fig_path)
 
-parameters = sys.argv[1]
+parameters_file_name = sys.argv[1]
 
 #Parameters
 
-param_module = importlib.import_module(parameters)
+param_module = importlib.import_module(parameters_file_name)
 
 radius = param_module.radius
 alpha_range = param_module.alpha_range
@@ -48,6 +48,7 @@ from scipy.integrate import quad
 
 for i,alpha in enumerate(alpha_range):
     plt.figure(dpi = 300)
+    plt.title(r"$x = %.3f"%(x))
     #Browninan
     print("Computing probas for BR, parameters : alpha = %.3f, beta = %.3f"%(alpha,0))
     save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(alpha,0)
@@ -55,22 +56,22 @@ for i,alpha in enumerate(alpha_range):
     n_samples,n_clusters = sample_times_BR.shape
     time_range_BR = np.linspace(0,3*np.mean(sample_times_BR[:,-1]),200)
 
-    time_range = 2/(1+alpha)*time_range_BR *(n_clusters)**(-alpha)/(-np.log(2*radius) + np.log(2))
+    time_range = 2/(1+alpha)*time_range_BR *(n_clusters)**(-alpha) * 1/(-np.log(2*radius) + np.log(2))
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
     plt.plot(time_range,probies, label = r"BR $\beta = 0$")
 
-    print("Computing probas for BR, parameters : alpha = %.3f, beta = %.3f"%(alpha,0.5))
-    save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(alpha,0.5)
-    sample_sizes_BR, sample_times_BR = concatenate_sim(save_path_i_BR)
-    n_samples,n_clusters = sample_times_BR.shape
-    time_range_BR = np.linspace(0,3*np.mean(sample_times_BR[:,-1]),200)
+    #print("Computing probas for BR, parameters : alpha = %.3f, beta = %.3f"%(alpha,0.5))
+    #save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(alpha,0.5)
+    #sample_sizes_BR, sample_times_BR = concatenate_sim(save_path_i_BR)
+    #n_samples,n_clusters = sample_times_BR.shape
+    #time_range_BR = np.linspace(0,3*np.mean(sample_times_BR[:,-1]),200)
+    #    #time_range = 2/(1+alpha)*time_range_BR *(n_clusters)**(-alpha)/(-np.log(2*radius) + np.log(2))
+    #probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
 
-    time_range = 2/(1+alpha)*time_range_BR *(n_clusters)**(-alpha)/(-np.log(2*radius) + np.log(2))
-    probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
-    plt.plot(time_range,probies, label = r"BR, $\beta = 0.5$")
+    #plt.plot(time_range,probies, label = r"BR, $\beta = 0.5$")
     # ML
     print("Computing probas for ML, parameters : alpha = %.3f"%(alpha) )
-    save_path_i_ML = save_path_SC + 'ML_' + str(i) 
+    save_path_i_ML = save_path_SC + 'alpha_%.3f'%(alpha)
     sample_sizes_ML, sample_times_ML = concatenate_sim(save_path_i_ML)
     n_samples,n_clusters = sample_times_ML.shape
 
@@ -80,7 +81,7 @@ for i,alpha in enumerate(alpha_range):
 
     # CAML
     print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )
-    save_path_i_CAML = save_path_CASC + 'CAML_' + str(i) 
+    save_path_i_CAML = save_path_CASC + 'alpha_%.3f'%(alpha)
     sample_sizes_CAML, sample_times_CAML = concatenate_sim(save_path_i_CAML)
     n_samples,n_clusters = sample_times_CAML.shape
     
@@ -88,4 +89,4 @@ for i,alpha in enumerate(alpha_range):
     plt.plot(time_range,probies, label = r"CASC")
 
     plt.legend()
-    plt.savefig(fig_path+file_name+'_'+str(i)+'_fig.png')
+    plt.savefig(fig_path+parameters_file_name+'_'+str(i)+'_fig.png')
