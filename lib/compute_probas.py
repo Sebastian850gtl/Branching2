@@ -74,7 +74,7 @@ def prob_fun(sample_sizes,sample_times,times,k,Nx):
         repeats = np.array(diff*(Nx + 1),dtype = 'int32')
 
         res = np.repeat(np.arrange(X.size),repeats=repeats)
-
+    
 
     # A reprendre ICI.
 

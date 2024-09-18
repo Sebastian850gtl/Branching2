@@ -46,7 +46,7 @@ M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 # simulation
 if not plot:
     M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-    for n in [10,20,30,40]:
+    for n in [50,75,100]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)+'/tmp'
         if not os.path.exists(save_path_n):
@@ -78,7 +78,7 @@ else:
     Ttheoric = (-np.log(2*r/R) +np.log(2) - 1)* R**2/(sigma1**2/2 + sigma2**2/2)
     plt.figure(dpi = 300)
     plt.xlabel("Number of samples")
-    for n in [10,20,30,40]:
+    for n in [10,20,30,40,50,75,100]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)
         

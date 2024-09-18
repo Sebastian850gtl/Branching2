@@ -37,7 +37,7 @@ sigma2 = 1
 n_clusters = 2
 Ntmax = np.inf
 
-sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
+sigmaf = lambda x : sigma1
 
 #M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 tol = 1/30
@@ -55,7 +55,7 @@ if not plot:
             os.makedirs(save_path_i)
         save_name = save_path_i +"/simtag_" +runtag 
         M.run(Ntmax = Ntmax,tol = tol,
-                    n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([2,1]))
+                    n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([1,1]))
 else:
     from concatenator import concatenate_sim
     import matplotlib.pyplot as plt

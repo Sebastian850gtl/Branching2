@@ -256,16 +256,21 @@ class Modelv3:
         for idi in range(n_samples):
             self.active = list(range(self.n_clusters))
             try: 
-                size_init.shape
-                self.current_sizes = size_init.copy()
+                # Traiter le cas ou on donne des sample et le cas ou on donne un vecteur !!!!
+                shape = size_init.shape
+                if len(shape == 1):
+                    self.current_sizes = size_init.copy()
+                else:
+                    self.current_sizes = size_init[idi,:].copy()
             except:
-                self.current_sizes = np.ones([self.n_clusters])
+                print("ZIZI")
+                self.current_sizes = np.ones([self.n_clusters])/self.n_clusters
             
             
             if position_init == 'center':
                 Y0 = np.zeros([1,3])
                 Y0[0,2] = 1
-                self.current_position = np.concatenate((Y0,uniform_init(self.n_clusters-1,0)),axis = 0)
+                self.current_position = np.concatenate((Y0,uniform_init(self.n_clusters-1)),axis = 0)
             elif position_init:
                 self.current_position = position_init
             else:

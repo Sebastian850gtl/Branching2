@@ -16,7 +16,7 @@ def lambda_alpha(n_clusters,k,alpha,assymp = 20):
         p3 = n_clusters**alpha * gamma(var3 - alpha)/gamma(var3)
     else:
         p3 = (n_clusters/(var3))**alpha
-    return 1/2 * p1 * p2 * p3
+    return 1/(1 + alpha) * p1 * p2 * p3
 
 def compute_lambdas(n_clusters,alpha):
     res = np.zeros([n_clusters-1])

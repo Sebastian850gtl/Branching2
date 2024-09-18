@@ -23,6 +23,7 @@ np.random.seed(int(runtag))
 
 param_module = importlib.import_module(parameters_file_name)
 n_samples = param_module.n_samples
+
 #Files locations
 
 save_path = '../../results/'+parameters_file_name+'/'
@@ -37,6 +38,8 @@ if not os.path.exists(save_path):
 for i,alpha in enumerate(param_module.alpha_range):
     for j,beta in enumerate(param_module.beta_range):
 
+        size_init = param_module.init_clusters(alpha)
+        print(size_init.shape)
         radiusf = lambda x : param_module.radius_0 * (param_module.n_clusters*x)**(beta)
         sigmaf = lambda x : np.sqrt(2*param_module.D0*(param_module.n_clusters*x)**(-alpha))
         
@@ -46,5 +49,5 @@ for i,alpha in enumerate(param_module.alpha_range):
             os.makedirs(save_path_n)
         save_name = save_path_n +"/simtag_" +runtag
         M.run(Ntmax = param_module.Ntmax,tol = param_module.tol,
-                n_samples = n_samples,save_name = save_name,stop = 1,size_init = param_module.init_clusters)
+                n_samples = n_samples,save_name = save_name,stop = 1,size_init = size_init)
         
