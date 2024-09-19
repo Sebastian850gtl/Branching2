@@ -62,7 +62,7 @@ if not plot:
 else:
     from concatenator import concatenate_sim
     import matplotlib.pyplot as plt
-    diffusion_range = np.arange(7)/5
+    diffusion_range = np.arange(7,11)/5
 
     # Plots
     # Simus with different Rslow

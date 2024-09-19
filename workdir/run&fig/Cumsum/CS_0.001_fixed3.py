@@ -75,7 +75,7 @@ else:
     # Plots
     # Simus with different Rslow
     R = 1
-    Ttheoric = (-np.log(2*r/R) +np.log(2) - 1)* R**2/(sigma1**2/2 + sigma2**2/2)
+    Ttheoric = (-np.log(2*r/R) +np.log(2))* R**2/(sigma1**2/2 + sigma2**2/2)
     plt.figure(dpi = 300)
     plt.xlabel("Number of samples")
     for n in [10,20,30,40,50,75,100]:

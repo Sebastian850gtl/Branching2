@@ -39,7 +39,7 @@ for i,alpha in enumerate(param_module.alpha_range):
     for j,beta in enumerate(param_module.beta_range):
 
         size_init = param_module.init_clusters(alpha)
-        print(size_init.shape)
+        print(len(size_init.shape))
         radiusf = lambda x : param_module.radius_0 * (param_module.n_clusters*x)**(beta)
         sigmaf = lambda x : np.sqrt(2*param_module.D0*(param_module.n_clusters*x)**(-alpha))
         

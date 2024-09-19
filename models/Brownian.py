@@ -258,12 +258,11 @@ class Modelv3:
             try: 
                 # Traiter le cas ou on donne des sample et le cas ou on donne un vecteur !!!!
                 shape = size_init.shape
-                if len(shape == 1):
+                if len(shape) == 1:
                     self.current_sizes = size_init.copy()
                 else:
                     self.current_sizes = size_init[idi,:].copy()
             except:
-                print("ZIZI")
                 self.current_sizes = np.ones([self.n_clusters])/self.n_clusters
             
             

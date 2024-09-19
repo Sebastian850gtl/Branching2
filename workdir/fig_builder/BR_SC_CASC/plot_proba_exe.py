@@ -54,12 +54,14 @@ for i,alpha in enumerate(alpha_range):
     save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(alpha,0)
     sample_sizes_BR, sample_times_BR = concatenate_sim(save_path_i_BR)
 
-    print(np.sum(sample_sizes_BR[0,0,:]))
+    print(np.sum(sample_sizes_BR[:,-1,-1])/10500)
+    n_samples, n_clusters = sample_times_BR.shape
     n_samples,n_clusters = sample_times_BR.shape
-    time_range_BR = np.linspace(0,3*np.mean(sample_times_BR[:,-1]),200)
+    time_range_BR = np.linspace(0,3.5*np.mean(sample_times_BR[:,-1]),200)
 
-    time_range = time_range_BR *(n_clusters)**(-alpha) * 1/(-np.log(2*radius) + np.log(2))
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
+    #print(probies)
+    time_range =  time_range_BR *(n_clusters)**(-alpha) *1/(-np.log(2*radius) + np.log(2))
     plt.plot(time_range,probies, label = r"BR $\beta = 0$")
 
     #print("Computing probas for BR, parameters : alpha = %.3f, beta = %.3f"%(alpha,0.5))
@@ -77,7 +79,7 @@ for i,alpha in enumerate(alpha_range):
     sample_sizes_ML, sample_times_ML = concatenate_sim(save_path_i_ML)
     n_samples,n_clusters = sample_times_ML.shape
 
-    time_range = np.linspace(0,3*np.mean(sample_times_ML[:,-1]),200)
+    #time_range = np.linspace(0,3*np.mean(sample_times_ML[:,-1]),100)
     probies = probs(sample_sizes_ML,sample_times_ML,time_range,k,x)
     plt.plot(time_range,probies, label = r"SC")
 
