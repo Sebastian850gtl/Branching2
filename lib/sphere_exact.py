@@ -102,6 +102,7 @@ def sampleA_infinite_normal(t):
     return int(mu + sigma_sample_inf*np.random.randn()) 
 
 def sampleA_infinte(t):
+    """ Treshold given in the article"""
     if t >= 0.1:
         return sampleA_infinte_exact(t)
     else:

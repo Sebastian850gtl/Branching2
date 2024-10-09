@@ -67,7 +67,7 @@ def boundary(array):
     ind = np.where(z<0)
     array[ind,2] =  - array[ind,2] #+ 2*radiuses[ind]
 
-def reflected_brownian_sphere(array,sigmas,dt,radiuses,switch = 0.005):
+def reflected_brownian_sphere(array,sigmas,dt,switch):
     """ """
     n_clusters,_ = array.shape
     dtsigmas = dt*sigmas**2
@@ -172,7 +172,7 @@ class Modelv3:
         
         return None
     
-    def _update_(self,tol):
+    def _update_(self,tol,switch):
         """Updates cluster positions and handles collisionevents 
         Arguments:
             tol : The tolerance paramter  for estimating the probability of  missing a collision    
@@ -216,7 +216,7 @@ class Modelv3:
             self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
 
             # updating position
-            U = reflected_brownian_sphere(X,self.active_sigmas,self.dt,self.active_radiuses)
+            U = reflected_brownian_sphere(X,self.active_sigmas,self.dt,switch = switch)
             self.current_position[self.active,:] = U
             self.times[self.active] += self.dt #update the clocks of all active clusters 
         else:
@@ -226,14 +226,13 @@ class Modelv3:
     
     def _adapt_dt_(self,tol,cross_sigmas_squares,dist,cross_radiuses):
         """ Function adapting the time step to the current realtive cluster positions"""
-        dt = np.min(((dist)**2/(2*cross_sigmas_squares)))* tol
-        
+        dt = np.min(((dist)**2/(2*cross_sigmas_squares)))* tol 
         if np.isnan(dt):
             print('===================================')
         self.dt = dt
         return None
         
-    def run(self,Ntmax,n_samples = 1,stop = 1,tol = 1e-3,position_init = False,size_init = False
+    def run(self,Ntmax,n_samples = 1,stop = 1,tol = 1e-3,switch = 0.005,position_init = False,size_init = False
             ,save_trajectories = False, save_name = None):
         """  Runs the model
         Arguments:
@@ -292,7 +291,7 @@ class Modelv3:
             k = 0
             while k <= Ntmax and len(self.active) >stop:
                 k = k + 1
-                self._update_(tol)
+                self._update_(tol,switch)
                 if save_trajectories:
                     self.trajectories.append(self.current_position)
                 else:

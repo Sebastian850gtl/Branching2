@@ -14,8 +14,8 @@ alpha_range = [0,1/3,2/3,1]
 beta_range = [0,1/2] 
 
 # Simulation parameters :
-n_samples = 1000
-n_runs = 20
+n_samples = 6000
+n_runs = 3
 
 # Initial distribution
 monodisperse = np.ones([n_clusters])/n_clusters

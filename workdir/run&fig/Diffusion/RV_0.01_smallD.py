@@ -46,14 +46,14 @@ radiusf = lambda x : radius
 
 if not plot:
     # Simulation
-    tol = 1/20
+    tol = 1/30
 
     diffusion_range = np.arange(11)/5
     for i,D2 in enumerate(diffusion_range):
         sigma2 = np.sqrt(2*D2)
         sigmaf = lambda x : sigma1*(x<= 1) + sigma2*(x > 1)
         M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-        save_path_i = save_path +"diffusion_"+ str(i) + '/tmp'
+        save_path_i = save_path +"diffusion_%.3f/tmp"%(D2)
         if not os.path.exists(save_path_i):
             os.makedirs(save_path_i)
         save_name = save_path_i +"/simtag_" +runtag 
@@ -79,8 +79,7 @@ else:
     diff_range_plot =  diffusion_range
     for i,D2 in enumerate(diffusion_range):
         sigma2 = np.sqrt(2*D2)
-        save_path_i = save_path +"diffusion_"+ str(i)
-
+        save_path_i = save_path +"diffusion_%.3f/tmp"%(D2)
         # Concatenating and loading samples
         sample_sizes, sample_times = concatenate_sim(save_path_i)
         n_sample,_ = sample_times.shape

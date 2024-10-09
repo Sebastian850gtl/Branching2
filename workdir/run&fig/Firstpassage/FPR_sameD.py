@@ -76,8 +76,13 @@ else:
     f = lambda x : (-np.log(r1 + x) + np.log(2) )* 2/(sigma1**2 + sigma2**2)
     radius_linspace = np.linspace(radius_range[0],radius_range[-1],200)
 
+    intercept = np.mean(f(radius_range) - meanTs)
+    print(intercept) 
+    g = lambda x : f(x) - intercept
+
     plt.figure(dpi = 300)
-    plt.plot(radius_linspace,f(radius_linspace),label = r'$r_B \mapsto \dfrac{-\log\left(\dfrac{r_A + r_B}{R}\right) + \log(2) }{D_B + D_A}$',color = 'darkorange')
+    plt.plot(radius_linspace,g(radius_linspace),label = r'$r \mapsto \dfrac{-\log\left(%.4f + r\right) + \log(2) }{%.1f + %.1f} + %.2f$'%(r1,sigma1**2/2,sigma2**2/2,intercept),
+             color = 'darkorange')
     plt.scatter(radius_range,meanTs,label = r'$\hat{T}$',color = 'blue')
     plt.legend()
     plt.ylabel("Time")
