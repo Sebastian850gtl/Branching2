@@ -17,7 +17,7 @@ from sphere_exact import sample_exactBr
 # All points are on a sphere of center 0,0,0 and radius 1
 # We use physical spherical coordinates azimuth is phi in [0,2*Pi] and elevation is theta in [0,Pi]
 # The clusters coordinates lie on the upper hemisphere therefore theta is in [0,Pi/2]
-# Clmuster mass is refered  here as size.
+# Clmuster mass is refered  here as mass.
 
 def project(array):
     """ Orthogonal projection of all the points on the semi-sphere of radius 1 """
@@ -138,6 +138,96 @@ def compute_cross_radius_cross_sigmas_squares_dist(array,radiuses,sigmas):
     cross_sigmas_squares = apply_to_couples_sumv2(sigmas**2,triu_indices)
     return dist, cross_radiuses, cross_sigmas_squares,triu_indices
 
+# Function handeling the construction of collision sets
+
+def colliding_sets(I,J):
+    """
+        Two elements $i <j$ are in relation if i = I[k], j = J[k] for a given k.
+        
+    Arguments:
+        I : list giving the i-indices ordered in non-increasing order.
+        J : list giving the j-indices such that subsets $A_i = \lbrace J[k], I[k] = i \rbrace$ are ordered.
+        Example:
+            I = [0,0,0,1,1,3,4,4]
+            J = [1,2,4,2,4,5,4,10]
+    Returns:
+        List of lists of element in a relation. By construction all lists are disjoint and of cardinal $\geq 2$
+        For the previous example:
+            [[0,1,2,4,10],[3,5]]
+    """
+    
+    # Reccurcive function constructing each set
+    # This algorithm
+    def aux(level_set,I_var,J_var):
+        """ Aguments:
+                level_set : list_giving all the nodes at the current level 
+                I_var : list giving the current i-indices of the collisions
+                J_var : list giving the current j-indices of the collisions
+            Returns:
+                Total equivalence set containing all nodes in relations without repetitions
+        """
+        if len(level_set) == 0: # There is no new nodes in relation with the current level ie we reached the deepest level of the tree.
+            return level_set
+        else:
+            new_level_set = []
+            ind_in_level_set = 0
+            n_var = len(I_var)
+            while n_var > 0 and ind_in_level_set < len(level_set):
+                i = level_set[ind_in_level_set]
+                
+                current_ind = 0
+                to_remove = []
+                while current_ind < n_var and I_var[current_ind] <= i:
+                    j_current, i_current = J_var[current_ind], I_var[current_ind]
+                    
+                    if i_current == i and j_current not in new_level_set:
+                        to_remove.append(current_ind)
+                        if j_current not in level_set:
+                            new_level_set.append(j_current)
+                        else:
+                            pass
+                    elif j_current == i and i_current not in new_level_set:
+                        new_level_set.append(i_current)
+                        to_remove.append(current_ind)
+                    else:
+                        pass
+                    current_ind += 1
+                for removed_count, ind_to_remove in enumerate(to_remove): # We remove all k such we already visited the couple I[K],J[k]
+                    I_var.pop(ind_to_remove - removed_count)
+                    J_var.pop(ind_to_remove - removed_count)
+                    n_var += -1
+                ind_in_level_set += 1
+            return level_set + aux(new_level_set,I_var,J_var)
+                            
+    I_var, J_var = list(I), list(J)
+    n_var = len(I_var)
+    sets = []
+    while n_var > 0:
+        total_set = aux([I_var[0]],I_var,J_var)
+        sets.append(total_set)
+        n_var = len(I_var)
+    return sets
+
+def handle_collisions(I,J,mass,active):
+    if len(I) == 1:
+        i, j = I[0], J[0]
+        mass[j] = mass[i] + mass[j]
+        mass[i] = 0
+        active.pop(i)
+    else:
+        sets = colliding_sets(I, J)
+        count_pops = 0
+        for set_coll in sets:
+            i0 = set_coll[0]
+            mass_sum = mass[i0]
+            for i in set_coll[1:]:
+                mass_sum += mass[i]
+                mass[i] = 0 
+                active.pop(i - count_pops)
+                count_pops += 1
+            mass[i0] = mass_sum
+    return mass
+
 #%%
 class Modelv3:
     """ Simulation of the Browninan Coalescence on the surface of a semi-sphere of radius 1 with reflective boundary conditions."""
@@ -152,22 +242,22 @@ class Modelv3:
         self.sigf = np.vectorize(sigmafun) 
         self.radiusf = np.vectorize(radfun)
         
-        self.active_sizes = None
+        self.active_masses = None
         self.active_sigmas = None
         self.active_radiuses = None
         
         self.dt = 0 # Adaptative time step
 
         self.times = None # shape = n_clusters
-        self.sizes = None # shape = n_clusters x n_clusters 
+        self.masses = None # shape = n_clusters x n_clusters 
         
         self.active = [] # List of active clusters. It is initialized in the run method not here.
         self.trajectories = None # Tab of trajectories, only usfull for visual reprenstations.
         
         self.current_position = None # The current positions in cartesian coordiantes of the clusters.
-        self.current_sizes = None # The current sizes of all clusters, the size is a positive real value.
+        self.current_masses = None # The current masses of all clusters, the mass is a positive real value.
         
-        self.sample_sizes = None # 3d array n_samples x n_clusters x n_clusters, that the run method will save.
+        self.sample_masses = None # 3d array n_samples x n_clusters x n_clusters, that the run method will save.
         self.sample_times = None # 2d array n_samples x n_clusters, second save of the run method.
         
         return None
@@ -190,27 +280,30 @@ class Modelv3:
             # the n colliding masses. This treatment is done below: The loop is iterating thgrough an adjacence matrix where adjacent nodes are
             # the indices of colliding clusters.
         if len(contact_indices_i) > 0:
-            size = self.active_sizes.copy()
-            for i,j in zip(contact_indices_i,contac_indices_j):
-                size[j] = size[i] + size[j]
-                size[i] = 0
-            self.current_sizes[self.active] = size #updates active cluster sizes
+            mass = self.active_masses.copy()
+            active = list(self.active)
+            mass = handle_collisions(contact_indices_i,contac_indices_j, mass,active)
+            self.current_masses[self.active] = mass #updates active cluster masses
+            # mass = self.active_masses.copy()
+            # for i,j in zip(contact_indices_i,contac_indices_j):
+            #     mass[j] = mass[i] + mass[j]
+            #     mass[i] = 0
+            # self.current_masses[self.active] = mass #updates active cluster masses
             # popping active elements in contact_indices_i
-            for ki,i in enumerate(np.unique(contact_indices_i)):
-                self.active.pop(i-ki) # We have to substract ki because the list self.active looses 1 element at each iteration.
-
-            self.sizes[self.active,:] = np.tile(self.current_sizes,(len(self.active),1))
+            # popping active elements in contact_indices_i
+            # for ki,i in enumerate(np.unique(contact_indices_i)):
+            #     self.active.pop(i-ki) # We have to substract ki because the list self.active looses 1 element at each iteration.
+            self.active = active
+            self.masses[self.active,:] = np.tile(self.current_masses,(len(self.active),1))
         
             X = self.current_position[self.active,:]
-            self.active_sizes = self.current_sizes[self.active]
-            self.active_sigmas =  self.sigf(self.active_sizes)
-            self.active_radiuses =  self.radiusf(self.active_sizes)
+            self.active_masses = self.current_masses[self.active]
+            self.active_sigmas =  self.sigf(self.active_masses)
+            self.active_radiuses =  self.radiusf(self.active_masses)
 
             dist, cross_radiuses, cross_sigmas_squares,triu_indices = compute_cross_radius_cross_sigmas_squares_dist(X,self.active_radiuses,self.active_sigmas)
         else:
             pass
-
-
         if len(self.active)> 1:
 
             self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
@@ -232,7 +325,7 @@ class Modelv3:
         self.dt = dt
         return None
         
-    def run(self,Ntmax,n_samples = 1,stop = 1,tol = 1e-3,switch = 0.005,position_init = False,size_init = False
+    def run(self,Ntmax,n_samples = 1,stop = 1,tol = 1e-3,switch = 0.005,position_init = False,mass_init = False
             ,save_trajectories = False, save_name = None):
         """  Runs the model
         Arguments:
@@ -241,28 +334,28 @@ class Modelv3:
             stop : Stops the runs when the  numlber of clustersis equal to stop
             tol : The tolerance paramter  for estimating the probability of  missing a collision    
             position_init : Initialisation of position if set on False the cluster are uniformly distributed on the sphere
-            size__init : Intialisation of the cluster sizes if set  to False they each receive size 1
+            mass__init : Intialisation of the cluster masses if set  to False they each receive mass 1
             save_trajectories :  If set to True saves trajectories of the clusters, to do only for a very number of samples
             save__name : File name where to save results 
         Results saved as npy file:
             _times : numpy ndarray shape = (n_samples,n_clusters) ; For each sample gives all the collision times, the first column is zeros since there is n_clusters-1 collisions.
-            _sizes : numpy ndarray shape = (n_samples,n_clusters,n_clusters); For T =  _times[i,j] the time at sample  i and collision j, _sizes[i,j,:]  is the cluster distribution at sample  i and collision number j.
+            _masses : numpy ndarray shape = (n_samples,n_clusters,n_clusters); For T =  _times[i,j] the time at sample  i and collision j, _masses[i,j,:]  is the cluster distribution at sample  i and collision number j.
         """
         print("Start of the run number of samples : "+str(n_samples))
         t0 = time()
-        self.sample_sizes = np.zeros([n_samples,self.n_clusters,self.n_clusters])
+        self.sample_masses = np.zeros([n_samples,self.n_clusters,self.n_clusters])
         self.sample_times = np.zeros([n_samples,self.n_clusters])
         for idi in range(n_samples):
             self.active = list(range(self.n_clusters))
             try: 
                 # Traiter le cas ou on donne des sample et le cas ou on donne un vecteur !!!!
-                shape = size_init.shape
+                shape = mass_init.shape
                 if len(shape) == 1:
-                    self.current_sizes = size_init.copy()
+                    self.current_masses = mass_init.copy()
                 else:
-                    self.current_sizes = size_init[idi,:].copy()
+                    self.current_masses = mass_init[idi,:].copy()
             except:
-                self.current_sizes = np.ones([self.n_clusters])/self.n_clusters
+                self.current_masses = np.ones([self.n_clusters])/self.n_clusters
             
             
             if position_init == 'center':
@@ -281,12 +374,12 @@ class Modelv3:
             # Initializing active varaibles
             # The active variables serve to store the values in memory instead of fetching them at each iteration.
             
-            self.active_sizes = self.current_sizes
-            self.active_sigmas =  self.sigf(self.current_sizes)
-            self.active_radiuses =  self.radiusf(self.current_sizes)
+            self.active_masses = self.current_masses
+            self.active_sigmas =  self.sigf(self.current_masses)
+            self.active_radiuses =  self.radiusf(self.current_masses)
             
             self.times = np.zeros([self.n_clusters])
-            self.sizes = np.tile(self.current_sizes,(self.n_clusters,1))
+            self.masses = np.tile(self.current_masses,(self.n_clusters,1))
 
             k = 0
             while k <= Ntmax and len(self.active) >stop:
@@ -298,21 +391,24 @@ class Modelv3:
                     pass
             
             sorted_indices = np.argsort(self.times)
-            self.times = self.times[sorted_indices]
-            self.sizes = self.sizes[sorted_indices,:]
+            temp = np.zeros([self.n_clusters])
+            temp[1:] = self.times[sorted_indices][:-1]
+            self.times = temp
+            
+            self.masses = self.masses[sorted_indices,:]
             self.sample_times[idi,:] = self.times
-            self.sample_sizes[idi,:,:] = self.sizes
+            self.sample_masses[idi,:,:] = self.masses
             print('\r',   'Advancement : %.1f'%(((idi+1)/n_samples)*100)+' %', 'done in %.2fs.' % (time() - t0),end='')
         print("End")
         print("Saving samples")
         if save_name:
             try:
-                previous_save_sizes = np.load(save_name+'_sizes.npy')
+                previous_save_masses = np.load(save_name+'_masses.npy')
                 previous_save_times = np.load(save_name+'_times.npy')
-                np.save(save_name+'_sizes.npy',np.concatenate((self.sample_sizes,previous_save_sizes),axis = 0))
+                np.save(save_name+'_masses.npy',np.concatenate((self.sample_masses,previous_save_masses),axis = 0))
                 np.save(save_name+'_times.npy',np.concatenate((self.sample_times,previous_save_times),axis = 0))
             except:
-                np.save(save_name+'_sizes.npy',self.sample_sizes)
+                np.save(save_name+'_masses.npy',self.sample_masses)
                 np.save(save_name+'_times.npy',self.sample_times)
         else:
             pass

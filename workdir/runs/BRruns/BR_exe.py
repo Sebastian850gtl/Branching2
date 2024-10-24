@@ -49,5 +49,5 @@ for i,alpha in enumerate(param_module.alpha_range):
             os.makedirs(save_path_n)
         save_name = save_path_n +"/simtag_" +runtag
         M.run(Ntmax = param_module.Ntmax,tol = param_module.tol,
-                n_samples = n_samples,save_name = save_name,stop = 1,size_init = size_init)
+                n_samples = n_samples,save_name = save_name,stop = 1,mass_init = size_init)
         
