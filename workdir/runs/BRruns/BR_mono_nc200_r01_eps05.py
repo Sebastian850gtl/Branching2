@@ -11,8 +11,7 @@ tol = 0.05
 
 # range of paramters for the radius and diffusion function
 alpha_range = [0,1/3,2/3,1]
-#beta_range = [0] 
-beta_range = [0, 1/2]
+beta_range = [0] 
 # Initial distribution
 monodisperse = np.ones([n_clusters])/n_clusters
 init_clusters = lambda alpha : monodisperse

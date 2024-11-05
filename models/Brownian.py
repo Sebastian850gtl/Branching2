@@ -180,15 +180,18 @@ def colliding_sets(I,J):
                 while current_ind < n_var and I_var[current_ind] <= i:
                     j_current, i_current = J_var[current_ind], I_var[current_ind]
                     
-                    if i_current == i and j_current not in new_level_set:
+                    if i_current == i:
                         to_remove.append(current_ind)
-                        if j_current not in level_set:
+                        if j_current not in level_set and j_current not in new_level_set:
                             new_level_set.append(j_current)
                         else:
                             pass
-                    elif j_current == i and i_current not in new_level_set:
-                        new_level_set.append(i_current)
+                    elif j_current == i:
                         to_remove.append(current_ind)
+                        if i_current not in new_level_set and i_current not in level_set:
+                            new_level_set.append(i_current)
+                        else:
+                            pass
                     else:
                         pass
                     current_ind += 1
@@ -209,24 +212,37 @@ def colliding_sets(I,J):
     return sets
 
 def handle_collisions(I,J,mass,active):
+    new_active = list(active)
+    if np.min(mass) < 1/100:
+        print("HEEREE")
+    #print("Before mass:",mass)
+    #print("Before active:",active)
     if len(I) == 1:
+        #print("Double case")
         i, j = I[0], J[0]
         mass[j] = mass[i] + mass[j]
         mass[i] = 0
-        active.pop(i)
+        new_active.pop(i)
     else:
         sets = colliding_sets(I, J)
-        count_pops = 0
+        To_pop = []
+        #print("Sets:",sets)
         for set_coll in sets:
             i0 = set_coll[0]
             mass_sum = mass[i0]
             for i in set_coll[1:]:
                 mass_sum += mass[i]
                 mass[i] = 0 
-                active.pop(i - count_pops)
-                count_pops += 1
+                To_pop.append(i)
             mass[i0] = mass_sum
-    return mass
+        #print("To pop:",To_pop)
+        #print(I)
+        #print(J)
+        for i in sorted(To_pop,reverse=True):
+            new_active.pop(i)
+    #print("After active:",new_active)
+    #print("After mass:",mass)
+    return mass,new_active
 
 #%%
 class Modelv3:
@@ -282,7 +298,7 @@ class Modelv3:
         if len(contact_indices_i) > 0:
             mass = self.active_masses.copy()
             active = list(self.active)
-            mass = handle_collisions(contact_indices_i,contac_indices_j, mass,active)
+            mass,new_active = handle_collisions(contact_indices_i,contac_indices_j, mass,active)
             self.current_masses[self.active] = mass #updates active cluster masses
             # mass = self.active_masses.copy()
             # for i,j in zip(contact_indices_i,contac_indices_j):
@@ -293,11 +309,12 @@ class Modelv3:
             # popping active elements in contact_indices_i
             # for ki,i in enumerate(np.unique(contact_indices_i)):
             #     self.active.pop(i-ki) # We have to substract ki because the list self.active looses 1 element at each iteration.
-            self.active = active
+            self.active = new_active
             self.masses[self.active,:] = np.tile(self.current_masses,(len(self.active),1))
-        
+
             X = self.current_position[self.active,:]
             self.active_masses = self.current_masses[self.active]
+                
             self.active_sigmas =  self.sigf(self.active_masses)
             self.active_radiuses =  self.radiusf(self.active_masses)
 

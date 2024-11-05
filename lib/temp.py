@@ -48,9 +48,12 @@ def colliding_sets(I,J):
                             new_level_set.append(j_current)
                         else:
                             pass
-                    elif j_current == i and i_current not in new_level_set:
-                        new_level_set.append(i_current)
+                    elif j_current == i:
                         to_remove.append(current_ind)
+                        if i_current not in new_level_set:
+                            new_level_set.append(i_current)
+                        else:
+                            pass
                     else:
                         pass
                     current_ind += 1
