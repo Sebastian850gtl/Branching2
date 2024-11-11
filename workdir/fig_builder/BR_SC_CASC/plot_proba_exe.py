@@ -56,8 +56,9 @@ for i,alpha in enumerate(alpha_range):
 
     n_samples, n_clusters = sample_times_BR.shape
     n_samples,n_clusters = sample_times_BR.shape
-
-    print(np.sum(sample_sizes_BR[:,-1,-1])/n_samples)
+    print(n_clusters)
+    print(sample_sizes_BR[0,-1,:])
+    print(np.sum(sample_sizes_BR[:,-1,:])/n_samples)
     time_range_BR = np.linspace(0,3.5*np.mean(sample_times_BR[:,-1]),200)
 
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
