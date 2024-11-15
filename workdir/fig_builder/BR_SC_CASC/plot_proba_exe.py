@@ -63,7 +63,7 @@ for i,alpha in enumerate(alpha_range):
 
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
     #print(probies)
-    time_range =  time_range_BR *(n_clusters)**(-alpha) *1/(-np.log(2*radius) + np.log(2))
+    time_range =  time_range_BR *(n_clusters)**(-alpha) *1/(-np.log(2*radius) + np.log(2)) #To be able to compare BR with SC and CASC we divide be the costant in front of the kernel.
     plt.plot(time_range,probies, label = r"BR $\beta = 0$")
 
     #print("Computing probas for BR, parameters : alpha = %.3f, beta = %.3f"%(alpha,0.5))

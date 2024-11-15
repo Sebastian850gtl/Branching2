@@ -14,6 +14,9 @@ def state(sample_times,times):
     sample_times : n_samples x n_clusters
 
     returns matrix : n_samples x n_times
+
+    For each sample maps the time range onto the sample of jumping times 
+    At time t gives sup(i, T_i < t)
     """
     times = np.array(times)
     n_times = len(times)
@@ -25,12 +28,49 @@ def state(sample_times,times):
         i = 0
         s = 0
         for ind_t,t in enumerate(times):
-            while s <= t and i < n_clusters:
+            while s <= t:# and i < n_clusters:
                 i = i + 1
                 s = sample_T[i]
             ind_Tt[id_sample,ind_t] = i - 1
     return ind_Tt
-            
+
+def number_of_masses(sample_mass,ind_Tt,masses):
+    """
+    sorted_sample_mass : shape n_sample x n_clusters x n_clusters, sorted on the last axis
+    masses : shape n_masses
+
+    returns array : n_samples x n_times x n_masses
+    """
+    _,_,n_clusters = sample_mass.shape
+    n_samples,n_times = ind_Tt.shape
+    n_masses = len(masses)
+    numbers = np.zeros([n_samples,n_times,n_masses],dtype = 'int32')
+    for id_sample in range(n_samples):
+        for ind_t in range(n_times):
+            sample_X = np.sort(sample_mass[id_sample,ind_Tt[id_sample,ind_t],:])
+            sample_X = np.concatenate((sample_X,np.array([np.inf])))
+
+            s, i = sample_X[0], 0
+            for ind_x, x in enumerate(masses):
+                while s < x:# and i < n_clusters:
+                    i = i + 1
+                    s = sample_X[i]
+                numbers[id_sample,ind_t,ind_x] = i
+    return n_clusters - numbers
+
+
+def prob_fun(sample_mass,sample_times,times,masses,k):
+    """ Returns the probability to have more or equal than k cluster of size >= size at
+    time t (t can also be an array)"""
+    ind_Tt = state(sample_times,times)
+    numbers = number_of_masses(sample_mass,ind_Tt,masses)
+    n_samples,n_times,n_masses = numbers.shape
+    res = np.zeros([n_masses,n_times])
+    for ind_t in range(n_times):
+        for ind_x in range(n_masses):
+            where_numbers = np.where(numbers[:,ind_t,ind_x] >= k)[0]
+            res[ind_x,ind_t] = len(where_numbers)/n_samples
+    return res
 
 def number_of_masses_bigger_than_x(arr,x):
     def count(D1array):
@@ -58,7 +98,7 @@ def probs(sample_sizes,sample_times,times,k,x):
         P.append(p)
     return np.array(P)
 
-def prob_fun(sample_sizes,sample_times,times,k,Nx):
+def prob_fun1(sample_sizes,sample_times,times,k,Nx):
     """ Returns the probability to have more or equal than k cluster of size >= size at
     time t (t can also be an array)"""
     n_samples,_ = sample_times.shape
@@ -70,13 +110,18 @@ def prob_fun(sample_sizes,sample_times,times,k,Nx):
     
     res = np.zeros([Nx+1,n_times])
     for i in range(n_times):
+        print(i)
         #sample_sizes_t = np.zeros([n_samples,n_clusters])
         sample_sizes_t = sample_sizes[sample_indices,ind_Tt[sample_indices,i],:]
         #print(sample_sizes_t.shape)
         for j in range(Nx+1):
+            print(i,j)
             x = j/Nx
             sample_number = number_of_masses_bigger_than_x(sample_sizes_t,x)
             p = len(np.where(sample_number >= k)[0])/n_samples
             res[j,i] = p
     return res
+
+
+
 
