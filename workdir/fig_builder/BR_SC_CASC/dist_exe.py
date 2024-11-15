@@ -65,7 +65,7 @@ def dist(A,B,d):
     return res
 
 Nx = 100
-masses = np.linspace(0.15,1,Nx)
+masses = np.linspace(0.1,1,Nx)
 d = 1
 k = 2
 for i,alpha in enumerate(alpha_range):
@@ -78,7 +78,7 @@ for i,alpha in enumerate(alpha_range):
     n_samples,n_clusters = sample_times_BR.shape
     print("...done in %.3f s"%(time()- t0))
 
-    time_range_BR = np.linspace(0,np.mean(sample_times_BR[:,-1])*2,150)
+    time_range_BR = np.linspace(0,np.mean(sample_times_BR[:,-1])/4,200)
     
     time_range =  time_range_BR *(n_clusters)**(-alpha) *1/(-np.log(2*radius) + np.log(2)) #To be able to compare BR with SC and CASC we divide be the costant in front of the kernel.
     print("Computing branching probability")
@@ -108,12 +108,12 @@ for i,alpha in enumerate(alpha_range):
     t0 = time()
     branching_proba_CASC = prob_fun(sample_sizes_CASC,sample_times_CASC,time_range,masses,k)
     print("...done in %.3f s"%(time()- t0))
-    #Plot
-    plt.figure(dpi = 300)
-    plt.plot(time_range,branching_proba_BR[28,:])
-    plt.plot(time_range,branching_proba_SC[28,:])
-    plt.plot(time_range,branching_proba_CASC[28,:])
-    plt.savefig(fig_path+parameters_file_name+'_%.3f_plot.png'%(alpha))
+    # #Plot
+    # plt.figure(dpi = 300)
+    # plt.plot(time_range,branching_proba_BR[28,:])
+    # plt.plot(time_range,branching_proba_SC[28,:])
+    # plt.plot(time_range,branching_proba_CASC[28,:])
+    # plt.savefig(fig_path+parameters_file_name+'_%.3f_plot.png'%(alpha))
     # Distances
     plt.figure(dpi = 300)
     # BR-SC

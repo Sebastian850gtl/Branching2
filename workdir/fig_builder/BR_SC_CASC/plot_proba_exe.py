@@ -43,8 +43,29 @@ save_path_CASC = '../../results/' + CASC_folder + '/'
 from compute_probas import probs
 from concatenator import concatenate_sim
 import matplotlib.pyplot as plt
-from scipy.special import gamma
 from scipy.integrate import quad
+from scipy.stats import norm, gamma
+from scipy.special import gamma as Gamma
+
+C1 = lambda alpha : Gamma(1 + alpha)**(1/(1+alpha))/(1 + alpha)
+C2 = lambda alpha : np.sqrt(C1(alpha)/(3 + 2*alpha))
+
+p = lambda x,alpha : 1 - gamma.cdf(x , 1 + alpha, scale = (1+alpha)**(-1))
+q = lambda x,t,alpha : p(x*C1(alpha)*t**(-1/(1+alpha)),alpha)
+f1 = lambda x,t,alpha : (1 - q(x,t,alpha))**((C1(alpha) + C2(alpha)**2/2*np.log(1 - q(x,t,alpha)))*t**(-1/(1+alpha))-1)
+
+f2 = lambda x,t,alpha : (C1(alpha) + C2(alpha)**2 * np.log(1 - q(x,t,alpha)))*q(x,t,alpha)*t**(-1/(1+alpha)) - q(x,t,alpha) + 1
+
+f3 = lambda x,t,alpha : (k-1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha))) - C2(alpha)*t**(-1/(2+2*alpha))*np.log(1- q(x,t,alpha))
+
+h = lambda t,alpha : (k-1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha)))
+
+f4 = lambda x,t,alpha : 1 - norm.cdf(f3(x,t,alpha))
+
+f5 = lambda x,t,alpha : 1/np.sqrt(2*np.pi)*q(x,t,alpha)*C2(alpha) *t**(-1/(2 + 2*alpha))*np.exp(-f3(x,t,alpha)**2/2)
+
+f = lambda x,t,alpha :  1 - norm.cdf(h(t,alpha)) - f1(x,t,alpha)*( f2(x,t,alpha)*f4(x,t,alpha) + f5(x,t,alpha))
+analytic = lambda x,t,alpha : f(x,t,alpha)
 
 for i,alpha in enumerate(alpha_range):
     plt.figure(dpi = 300)
@@ -56,9 +77,6 @@ for i,alpha in enumerate(alpha_range):
 
     n_samples, n_clusters = sample_times_BR.shape
     n_samples,n_clusters = sample_times_BR.shape
-    print(n_clusters)
-    print(sample_sizes_BR[0,-1,:])
-    print(np.sum(sample_sizes_BR[:,-1,:])/n_samples)
     time_range_BR = np.linspace(0,3.5*np.mean(sample_times_BR[:,-1]),200)
 
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
@@ -94,5 +112,11 @@ for i,alpha in enumerate(alpha_range):
     probies = probs(sample_sizes_CAML,sample_times_CAML,time_range,k,x)
     plt.plot(time_range,probies, label = r"CASC")
 
+    # Gaussian fluct
+    print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )
+    
+    ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
+    plt.plot(ts, analytic(x,ts,alpha), label = r"Analytic")
+    
     plt.legend()
-    plt.savefig(fig_path+parameters_file_name+'_'+str(i)+'_fig.png')
+    plt.savefig(fig_path+parameters_file_name+'_%.3f_fig.png'%(alpha))
