@@ -12,6 +12,7 @@ No temporary files
 Loading results
  Number of final samples 20000,
 Computing probas for CAML, parameters : alpha = 0.000
+Computing probas for CAML, parameters : alpha = 0.000
 Computing probas for BR, parameters : alpha = 0.333, beta = 0.000
 No temporary files
 Loading results
@@ -24,6 +25,7 @@ Computing probas for CAML, parameters : alpha = 0.333
 No temporary files
 Loading results
  Number of final samples 20000,
+Computing probas for CAML, parameters : alpha = 0.333
 Computing probas for CAML, parameters : alpha = 0.333
 Computing probas for BR, parameters : alpha = 0.667, beta = 0.000
 No temporary files
@@ -38,6 +40,7 @@ No temporary files
 Loading results
  Number of final samples 20000,
 Computing probas for CAML, parameters : alpha = 0.667
+Computing probas for CAML, parameters : alpha = 0.667
 Computing probas for BR, parameters : alpha = 1.000, beta = 0.000
 No temporary files
 Loading results
@@ -50,4 +53,5 @@ Computing probas for CAML, parameters : alpha = 1.000
 No temporary files
 Loading results
  Number of final samples 20000,
+Computing probas for CAML, parameters : alpha = 1.000
 Computing probas for CAML, parameters : alpha = 1.000

@@ -67,6 +67,8 @@ f5 = lambda x,t,alpha : 1/np.sqrt(2*np.pi)*q(x,t,alpha)*C2(alpha) *t**(-1/(2 + 2
 f = lambda x,t,alpha :  1 - norm.cdf(h(t,alpha)) - f1(x,t,alpha)*( f2(x,t,alpha)*f4(x,t,alpha) + f5(x,t,alpha))
 analytic = lambda x,t,alpha : f(x,t,alpha)
 
+analytic2 = lambda x,t,alpha : (q(x,t,alpha))*(1 - norm.cdf((1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha)))))
+
 for i,alpha in enumerate(alpha_range):
     plt.figure(dpi = 300)
     plt.title(r"$x = %.3f$ and $\alpha = %.3f$"%(x,alpha))
@@ -117,6 +119,12 @@ for i,alpha in enumerate(alpha_range):
     
     ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
     plt.plot(ts, analytic(x,ts,alpha), label = r"Analytic")
+
+    # Gaussian fluct2
+    print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )
+    
+    ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
+    plt.plot(ts, analytic2(x,ts,alpha), label = r"Analytic2")
     
     plt.legend()
     plt.savefig(fig_path+parameters_file_name+'_%.3f_fig.png'%(alpha))
