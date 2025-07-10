@@ -51,7 +51,7 @@ C1 = lambda alpha : Gamma(1 + alpha)**(1/(1+alpha))/(1 + alpha)
 C2 = lambda alpha : np.sqrt(C1(alpha)/(3 + 2*alpha))
 
 p = lambda x,alpha : 1 - gamma.cdf(x , 1 + alpha, scale = (1+alpha)**(-1))
-q = lambda x,t,alpha : p(x*C1(alpha)*t**(-1/(1+alpha)),alpha)
+q = lambda x,t,alpha : p(x*(C1(alpha)*t**(-1/(1+alpha))),alpha)
 f1 = lambda x,t,alpha : (1 - q(x,t,alpha))**((C1(alpha) + C2(alpha)**2/2*np.log(1 - q(x,t,alpha)))*t**(-1/(1+alpha))-1)
 
 f2 = lambda x,t,alpha : (C1(alpha) + C2(alpha)**2 * np.log(1 - q(x,t,alpha)))*q(x,t,alpha)*t**(-1/(1+alpha)) - q(x,t,alpha) + 1
@@ -67,11 +67,18 @@ f5 = lambda x,t,alpha : 1/np.sqrt(2*np.pi)*q(x,t,alpha)*C2(alpha) *t**(-1/(2 + 2
 f = lambda x,t,alpha :  1 - norm.cdf(h(t,alpha)) - f1(x,t,alpha)*( f2(x,t,alpha)*f4(x,t,alpha) + f5(x,t,alpha))
 analytic = lambda x,t,alpha : f(x,t,alpha)
 
-analytic2 = lambda x,t,alpha : (q(x,t,alpha))*(1 - norm.cdf((1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha)))))
+#analytic2 = lambda x,t,alpha : (q(x,t,alpha))*(1 - norm.cdf((1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha)))))
 
+analytic2 = lambda x,t,alpha : (q(x,t,alpha))**2 *(1 - norm.cdf((1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha)))))
+
+# analytic3 = lambda x,t,alpha : 1 / Gamma(1 + alpha)**2* (1 + alpha)**(2*alpha)* x**(2*alpha)*(1 - 2*x)**((1 + alpha)*C1(alpha)*t**(-1/(1+alpha))-1-2*alpha)* (1 - norm.cdf((1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha)))))
+
+print("Hello")
 for i,alpha in enumerate(alpha_range):
-    plt.figure(dpi = 300)
-    plt.title(r"$x = %.3f$ and $\alpha = %.3f$"%(x,alpha))
+    plt.figure(dpi = 200)
+    #plt.title(r"$x = %.3f$ and $\alpha = %.3f$"%(x,alpha))
+    plt.xlabel("Time")
+    plt.ylabel("Branching probability")
     #Browninan
     print("Computing probas for BR, parameters : alpha = %.3f, beta = %.3f"%(alpha,0))
     save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(alpha,0)
@@ -79,12 +86,12 @@ for i,alpha in enumerate(alpha_range):
 
     n_samples, n_clusters = sample_times_BR.shape
     n_samples,n_clusters = sample_times_BR.shape
-    time_range_BR = np.linspace(0,3.5*np.mean(sample_times_BR[:,-1]),200)
+    time_range_BR = np.linspace(0,3*np.mean(sample_times_BR[:,-1]),300)
 
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
     #print(probies)
     time_range =  time_range_BR *(n_clusters)**(-alpha) *1/(-np.log(2*radius) + np.log(2)) #To be able to compare BR with SC and CASC we divide be the costant in front of the kernel.
-    plt.plot(time_range,probies, label = r"BR $\beta = 0$")
+    plt.plot(time_range,probies, label = r"Brownian coalescence")
 
     #print("Computing probas for BR, parameters : alpha = %.3f, beta = %.3f"%(alpha,0.5))
     #save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(alpha,0.5)
@@ -103,7 +110,7 @@ for i,alpha in enumerate(alpha_range):
 
     #time_range = np.linspace(0,3*np.mean(sample_times_ML[:,-1]),100)
     probies = probs(sample_sizes_ML,sample_times_ML,time_range,k,x)
-    plt.plot(time_range,probies, label = r"SC")
+    plt.plot(time_range,probies, label = r"Stochastic coalescence")
 
     # CAML
     print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )
@@ -115,16 +122,20 @@ for i,alpha in enumerate(alpha_range):
     plt.plot(time_range,probies, label = r"CASC")
 
     # Gaussian fluct
-    print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )
+    print("Computing analytic 1 : alpha = %.3f"%(alpha) )
     
     ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
+    ts = time_range
     plt.plot(ts, analytic(x,ts,alpha), label = r"Analytic")
 
-    # Gaussian fluct2
-    print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )
+    # # Gaussian fluct2
+    # print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )
     
-    ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
-    plt.plot(ts, analytic2(x,ts,alpha), label = r"Analytic2")
+    # ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
+    # plt.plot(ts, analytic3(x,ts,alpha), label = r"Analytic2")
+    # print("Computing analytic 2 : alpha = %.3f"%(alpha) )
     
+    # ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
+    # plt.plot(ts, analytic2(x,ts,alpha), label = r"Analytic2")
     plt.legend()
     plt.savefig(fig_path+parameters_file_name+'_%.3f_fig.png'%(alpha))

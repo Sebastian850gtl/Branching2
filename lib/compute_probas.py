@@ -36,7 +36,7 @@ def state(sample_times,times):
 
 def number_of_masses(sample_mass,ind_Tt,masses):
     """
-    sorted_sample_mass : shape n_sample x n_clusters x n_clusters, sorted on the last axis
+    sample_mass : shape n_sample x n_clusters x n_clusters
     masses : shape n_masses
 
     returns array : n_samples x n_times x n_masses
@@ -44,18 +44,22 @@ def number_of_masses(sample_mass,ind_Tt,masses):
     _,_,n_clusters = sample_mass.shape
     n_samples,n_times = ind_Tt.shape
     n_masses = len(masses)
-    numbers = np.zeros([n_samples,n_times,n_masses],dtype = 'int32')
+    numbers = np.zeros([n_samples,n_times,n_masses],dtype = 'int')
     for id_sample in range(n_samples):
         for ind_t in range(n_times):
             sample_X = np.sort(sample_mass[id_sample,ind_Tt[id_sample,ind_t],:])
             sample_X = np.concatenate((sample_X,np.array([np.inf])))
-
             s, i = sample_X[0], 0
             for ind_x, x in enumerate(masses):
+                if id_sample == 0 and ind_t in [5,20,40,100]:
+                    print(n_clusters)
                 while s < x:# and i < n_clusters:
                     i = i + 1
                     s = sample_X[i]
                 numbers[id_sample,ind_t,ind_x] = i
+            if id_sample == 0 and ind_t in [5,20,40,100]:
+                print(sample_X)
+                print(numbers[id_sample,ind_t,:])
     return n_clusters - numbers
 
 
@@ -81,7 +85,7 @@ def number_of_masses_bigger_than_x(arr,x):
 def probs(sample_sizes,sample_times,times,k,x):
     """ Returns the probability to have more or equal than k cluster of size >= size at
     time t (t can also be an array)"""
-    
+    print(x)
     ind_Tt = state(sample_times,times)
     n_times = len(times)
     n_samples,_ = sample_times.shape
@@ -91,8 +95,6 @@ def probs(sample_sizes,sample_times,times,k,x):
     for i in range(n_times):
         #sample_sizes_t = np.zeros([n_samples,n_clusters])
         sample_sizes_t = sample_sizes[sample_indices,ind_Tt[sample_indices,i],:]
-        #print(sample_sizes_t.shape)
-
         sample_number = number_of_masses_bigger_than_x(sample_sizes_t,x)
         p = len(np.where(sample_number >= k)[0])/n_samples
         P.append(p)

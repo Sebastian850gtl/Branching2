@@ -5,5 +5,5 @@ alpha_range = [0,1/3,2/3,1]
 init_clusters = np.ones([n_clusters])/n_clusters
 
 # Simulation
-n_samples = 20000
+n_samples = 100
 n_runs = 1

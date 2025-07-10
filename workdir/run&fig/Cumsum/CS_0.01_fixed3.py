@@ -46,14 +46,14 @@ M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 # simulation
 if not plot:
     M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-    for n in [5,10,20,40,50,75,100]:
+    for n in [5,10,20,40,50]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)+'/tmp'
         if not os.path.exists(save_path_n):
             os.makedirs(save_path_n)
         save_name = save_path_n +"/simtag_" +runtag
         M.run(Ntmax = Ntmax,tol = tol,
-                    n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([2,1]))
+                    n_samples = n_sample,save_name = save_name,stop = 1,mass_init = np.array([2,1]))
 
 else:
     import matplotlib.pyplot as plt
@@ -78,14 +78,14 @@ else:
     Ttheoric = (-np.log(2*r/R) + np.log(2))* 1/(sigma1**2/2 + sigma2**2/2)
 
     plt.figure(dpi = 300)
-    for n in [5,10,20,40,50,75,100]:
+    for n in [5,10,20,40,50]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)
         
-
         # Concatenate simulations from different runs and load results
         sample_sizes, sample_times = concatenate_sim(save_path_n)
         n_sample,_ = sample_times.shape
+        print("Samplu", n_sample)
         cum_n_sample = np.arange(1,n_sample+1)
 
         cumsum_times = np.cumsum(sample_times[:,-1])/cum_n_sample

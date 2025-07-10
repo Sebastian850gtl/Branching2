@@ -33,10 +33,10 @@ alpha_range =  param_module.alpha_range
 # Initial distribution 
 init_clusters_fun = param_module.init_clusters
 
-
+print("yes")
 for i,alpha in enumerate(alpha_range):
     init_clusters = init_clusters_fun(alpha)
-    print(" Running Stochasc Coalescence")
+    print(" Running Stochastic Coalescence")
     kernel = lambda x,y : 1/x**alpha + 1/y**alpha
     M1 = Coalescence(n_clusters = n_clusters,kernel = kernel)
     save_path_i_ML = save_path + save_path + 'alpha_%.3f/tmp'%(alpha)

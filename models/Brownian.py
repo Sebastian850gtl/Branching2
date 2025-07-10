@@ -375,7 +375,7 @@ class Modelv3:
                 self.current_masses = np.ones([self.n_clusters])/self.n_clusters
             
             
-            if position_init == 'center':
+            if position_init == 'center': # For the test case with MFPT.
                 Y0 = np.zeros([1,3])
                 Y0[0,2] = 1
                 self.current_position = np.concatenate((Y0,uniform_init(self.n_clusters-1)),axis = 0)

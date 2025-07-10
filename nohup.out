@@ -1,0 +1,96 @@
+Traceback (most recent call last):
+  File "/workdir/sbaudelet/Documents/Branching2/workdir/fig_builder/BR_SC_CASC/plot_proba_exe.py", line 28, in <module>
+    param_module = importlib.import_module(parameters_file_name)
+  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 973, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'BR_SC_CASC_mono_100_001'
+Computing probas for BR, parameters : alpha = 0.000, beta = 0.000
+Concatenating results in file ../../results/BR_mono_100_001/alpha_beta_0.000_0.000/tmp/
+Number of temporary instances : 24
+ Number of initial particles : 100
+ Number of final samples 12000,
+Deleting temporary file
+Computing probas for ML, parameters : alpha = 0.000
+No temporary files
+Loading results
+ Number of final samples 20000,
+Computing probas for CAML, parameters : alpha = 0.000
+No temporary files
+Loading results
+ Number of final samples 20000,
+Computing probas for BR, parameters : alpha = 0.333, beta = 0.000
+Concatenating results in file ../../results/BR_mono_100_001/alpha_beta_0.333_0.000/tmp/
+Number of temporary instances : 24
+ Number of initial particles : 100
+ Number of final samples 12000,
+Deleting temporary file
+Computing probas for ML, parameters : alpha = 0.333
+No temporary files
+Loading results
+ Number of final samples 20000,
+Computing probas for CAML, parameters : alpha = 0.333
+No temporary files
+Loading results
+ Number of final samples 20000,
+Computing probas for BR, parameters : alpha = 0.667, beta = 0.000
+Concatenating results in file ../../results/BR_mono_100_001/alpha_beta_0.667_0.000/tmp/
+Number of temporary instances : 24
+ Number of initial particles : 100
+ Number of final samples 12000,
+Deleting temporary file
+Computing probas for ML, parameters : alpha = 0.667
+No temporary files
+Loading results
+ Number of final samples 20000,
+Computing probas for CAML, parameters : alpha = 0.667
+No temporary files
+Loading results
+ Number of final samples 20000,
+Computing probas for BR, parameters : alpha = 1.000, beta = 0.000
+Concatenating results in file ../../results/BR_mono_100_001/alpha_beta_1.000_0.000/tmp/
+Number of temporary instances : 24
+ Number of initial particles : 100
+ Number of final samples 12000,
+Deleting temporary file
+Computing probas for ML, parameters : alpha = 1.000
+No temporary files
+Loading results
+ Number of final samples 20000,
+Computing probas for CAML, parameters : alpha = 1.000
+No temporary files
+Loading results
+ Number of final samples 20000,
+Computing probas for BR, parameters : alpha = 0.000, beta = 0.000
+Concatenating results in file ../../results/BR_dir_nc100_r01_eps1/alpha_beta_0.000_0.000/tmp/
+Number of temporary instances : 40
+ Number of initial particles : 100
+Traceback (most recent call last):
+  File "workdir/fig_builder/BR_SC_CASC/plot_proba_exe.py", line 55, in <module>
+    sample_sizes_BR, sample_times_BR = concatenate_sim(save_path_i_BR)
+  File "/home/sbaudelet/Documents/Branching2/workdir/../lib/concatenator.py", line 32, in concatenate_sim
+    sample_sizes = np.concatenate((sample_sizes,array_i),axis = 0)
+KeyboardInterrupt
+Loading Brownian samples 
+ ...parameters: alpha = 0.000, beta = 0.000
+No temporary files
+Loading results
+Traceback (most recent call last):
+  File "/workdir/sbaudelet/Documents/Branching2/workdir/../lib/concatenator.py", line 61, in concatenate_sim
+    sample_sizes = np.load(results_path +'/_sizes.npy')
+  File "/home/sbaudelet/.local/lib/python3.10/site-packages/numpy/lib/npyio.py", line 456, in load
+    return format.read_array(fid, allow_pickle=allow_pickle,
+  File "/home/sbaudelet/.local/lib/python3.10/site-packages/numpy/lib/format.py", line 809, in read_array
+    array = numpy.fromfile(fp, dtype=dtype, count=count)
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workdir/sbaudelet/Documents/Branching2/workdir/fig_builder/BR_SC_CASC/dist_exe.py", line 76, in <module>
+    sample_sizes_BR, sample_times_BR = concatenate_sim(save_path_i_BR)
+  File "/workdir/sbaudelet/Documents/Branching2/workdir/../lib/concatenator.py", line 67, in concatenate_sim
+    raise ValueError("No sample_files")
+ValueError: No sample_files
