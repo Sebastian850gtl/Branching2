@@ -124,8 +124,10 @@ for i,alpha in enumerate(alpha_range):
     # Gaussian fluct
     print("Computing analytic 1 : alpha = %.3f"%(alpha) )
     
-    ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
+    #ts = np.linspace(0.001,3*C1(alpha)/((k-1)**(1+alpha)),100)
+
     ts = time_range
+    ts[0] = ts[1]
     plt.plot(ts, analytic(x,ts,alpha), label = r"Analytic")
 
     # # Gaussian fluct2

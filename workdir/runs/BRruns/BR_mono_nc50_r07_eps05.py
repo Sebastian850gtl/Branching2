@@ -11,7 +11,7 @@ tol = 0.05
 
 # range of paramters for the radius and diffusion function
 alpha_range = [0,1/3,2/3,1]
-beta_range = [0] 
+beta_range = [1/2,1] 
 
 # Simulation parameters :
 n_samples = 7000

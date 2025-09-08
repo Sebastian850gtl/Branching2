@@ -51,15 +51,15 @@ def number_of_masses(sample_mass,ind_Tt,masses):
             sample_X = np.concatenate((sample_X,np.array([np.inf])))
             s, i = sample_X[0], 0
             for ind_x, x in enumerate(masses):
-                if id_sample == 0 and ind_t in [5,20,40,100]:
-                    print(n_clusters)
+                # if id_sample == 0 and ind_t in [5,20,40,100]:
+                #     print(n_clusters)
                 while s < x:# and i < n_clusters:
                     i = i + 1
                     s = sample_X[i]
                 numbers[id_sample,ind_t,ind_x] = i
-            if id_sample == 0 and ind_t in [5,20,40,100]:
-                print(sample_X)
-                print(numbers[id_sample,ind_t,:])
+            # if id_sample == 0 and ind_t in [5,20,40,100]:
+            #     print(sample_X)
+            #     print(numbers[id_sample,ind_t,:])
     return n_clusters - numbers
 
 

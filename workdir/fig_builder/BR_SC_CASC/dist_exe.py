@@ -50,8 +50,8 @@ save_path_CASC = '../../results/' + CASC_folder + '/'
 from compute_probas import probs,prob_fun
 from concatenator import concatenate_sim
 import matplotlib.pyplot as plt
-from scipy.special import gamma
-from scipy.integrate import quad
+from scipy.stats import norm, gamma
+from scipy.special import gamma as Gamma
 from time import time
 
 def dist(A,B,d):
@@ -70,9 +70,41 @@ def dist(A,B,d):
         res[nt] = maxi
     return res
 
+def dist_inf(A,B):
+    """ 
+    A and B are 2-dimensional matrices corresponding to the probability functions first dimension is the mass discretization and second time
+    d is the order of the distance on the mass dimension
+    """
+
+    Nx,Nt = A.shape # len(times) = Nt 
+    D1 = np.abs(A-B)
+    return np.max(D1)
+
+
+C1 = lambda alpha : Gamma(1 + alpha)**(1/(1+alpha))/(1 + alpha)
+C2 = lambda alpha : np.sqrt(C1(alpha)/(3 + 2*alpha))
+
+p = lambda x,alpha : 1 - gamma.cdf(x , 1 + alpha, scale = (1+alpha)**(-1))
+q = lambda x,t,alpha : p(x*(C1(alpha)*t**(-1/(1+alpha))),alpha)
+f1 = lambda x,t,alpha : (1 - q(x,t,alpha))**((C1(alpha) + C2(alpha)**2/2*np.log(1 - q(x,t,alpha)))*t**(-1/(1+alpha))-1)
+
+f2 = lambda x,t,alpha : (C1(alpha) + C2(alpha)**2 * np.log(1 - q(x,t,alpha)))*q(x,t,alpha)*t**(-1/(1+alpha)) - q(x,t,alpha) + 1
+
+f3 = lambda x,t,alpha : (k-1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha))) - C2(alpha)*t**(-1/(2+2*alpha))*np.log(1- q(x,t,alpha))
+
+h = lambda t,alpha : (k-1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha)))
+
+f4 = lambda x,t,alpha : 1 - norm.cdf(f3(x,t,alpha))
+
+f5 = lambda x,t,alpha : 1/np.sqrt(2*np.pi)*q(x,t,alpha)*C2(alpha) *t**(-1/(2 + 2*alpha))*np.exp(-f3(x,t,alpha)**2/2)
+
+f = lambda x,t,alpha :  1 - norm.cdf(h(t,alpha)) - f1(x,t,alpha)*( f2(x,t,alpha)*f4(x,t,alpha) + f5(x,t,alpha))
+analytic = lambda x,t,alpha : f(x,t,alpha)
+
+
 
 use_saved_branching_proba = 1
-Nx, Nt = 100, 40 # Used only if use_saved_branching_proba = 0
+Nx, Nt = 100, 200 # Used only if use_saved_branching_proba = 0
 masses = np.linspace(0.1,1,Nx) # Used only if use_saved_branching_proba = 0
 d = 1
 k = 2
@@ -156,33 +188,64 @@ for i,alpha in enumerate(alpha_range):
     # Distances
     # BR-SC
     time_range = time_range[:Nt]
-    plt.figure(dpi = 300)
-    plt.xlabel(r"Time horizon $T$")
-
     print("Computing distances between BR and SC")
     t0 = time()
     dists = dist(branching_proba_BR,branching_proba_SC,d)
-    plt.plot(time_range, dists[:Nt], label = r'distance $d(p_{BR},p_{SC})$')
+    dists_inf = dist_inf(branching_proba_BR,branching_proba_SC)
+
+
     print("...done in %.3f s"%(time()- t0))
+    print("Distance  1 for alpha = %.3f, radius = %.3f: %.6f"%(alpha,radius,dists[-1]))
+    print("Distance sup for alpha = %.3f, radius = %.3f: %.6f"%(alpha,radius,dists_inf))
+
     #plt.savefig(fig_path+parameters_file_name+"BR_SC"+'_%.3f_dist.png'%(alpha))
-    # BR-CASC
-    #plt.figure(dpi = 300)
-    print("Computing distances between BR and CASC")
-    t0 = time()
-    dists = dist(branching_proba_BR,branching_proba_CASC,d)
-    plt.plot(time_range, dists[:Nt], label = r'distance $d(p_{BR},p_{CASC})$')
-    print("...done in %.3f s"%(time()- t0))
-    #plt.savefig(fig_path+parameters_file_name+"BR_CASC"+'_%.3f_dist.png'%(alpha))
+
     # SC-CASC
     #plt.figure(dpi = 300)
     print("Computing distances between SC and CASC")
     t0 = time()
     dists = dist(branching_proba_CASC,branching_proba_SC,d)
-    plt.plot(time_range, dists[:Nt], label = r'distance $d(p_{SC},p_{CASC})$')
+    dists_inf = dist_inf(branching_proba_CASC,branching_proba_SC)
+    #plt.plot(time_range, dists[:Nt], label = r'distance $d(p_{SC},p_{CASC})$')
+
     print("...done in %.3f s"%(time()- t0))
-    plt.legend()
-    plt.savefig(fig_path+parameters_file_name+'_%.3f_dist.png'%(alpha))
+
+    print("Distance  1 for alpha = %.3f, radius = %.3f: %.6f"%(alpha,radius,dists[-1]))
+    print("Distance sup for alpha = %.3f, radius = %.3f: %.6f"%(alpha,radius,dists_inf))
+
+
+    # BR-CASC
+    #plt.figure(dpi = 300)
+    print("Computing distances between BR and CASC")
+    t0 = time()
+    dists = dist(branching_proba_BR,branching_proba_CASC,d)
+    dists_inf = dist_inf(branching_proba_BR,branching_proba_CASC)
+
+    #plt.plot(time_range, dists[:Nt], label = r'distance $d(p_{BR},p_{CASC})$')
+    print("...done in %.3f s"%(time()- t0))
+    #plt.savefig(fig_path+parameters_file_name+"BR_CASC"+'_%.3f_dist.png'%(alpha))
+    print("Distance  1 for alpha = %.3f, radius = %.3f: %.6f"%(alpha,radius,dists[-1]))
+    print("Distance sup for alpha = %.3f, radius = %.3f: %.6f"%(alpha,radius,dists_inf))
+
+    #BR_Analytic
+    time_range_2 = time_range.copy()
+    time_range_2[0] = time_range[1]/2
     
+    grid_times, grid_mass  = np.meshgrid(time_range_2,masses)
+
+    #print(grid_mass.shape)
+    branching_proba_Analytic = analytic(grid_mass,grid_times,alpha)
+    print("Computing distances between BR and Analytic")
+    t0 = time()
+    dists = dist(branching_proba_BR,branching_proba_Analytic,d)
+    dists_inf = dist_inf(branching_proba_BR,branching_proba_Analytic)
+    
+    print("...done in %.3f s"%(time()- t0))
+    print("Distance  1 for alpha = %.3f, radius = %.3f: %.6f"%(alpha,radius,dists[-1]))
+    print("Distance sup for alpha = %.3f, radius = %.3f: %.6f"%(alpha,radius,dists_inf))
+
+    #plt.legend()
+    #plt.savefig(fig_path+parameters_file_name+'_%.3f_dist.png'%(alpha))
     
     plt.figure(dpi = 200)
     plt.title("Comparpar mass alpha = "+str(alpha))

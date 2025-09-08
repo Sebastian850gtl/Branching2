@@ -78,22 +78,47 @@ else:
     Ttheoric = (-np.log(2*r/R) + np.log(2))* 1/(sigma1**2/2 + sigma2**2/2)
 
     plt.figure(dpi = 300)
-    for n in [5,10,20,40,50]:
+    plt.xlabel("Number of samples")
+    for n in [5,10,20,40]:#,50]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)
         
         # Concatenate simulations from different runs and load results
         sample_sizes, sample_times = concatenate_sim(save_path_n)
+
         n_sample,_ = sample_times.shape
         print("Samplu", n_sample)
-        cum_n_sample = np.arange(1,n_sample+1)
+        cum_n_sample = np.arange(2,n_sample+1)
 
-        cumsum_times = np.cumsum(sample_times[:,-1])/cum_n_sample
+
+        cum_sum_x = np.cumsum(sample_times[1:,-1])
+        cum_sum_x_2 = np.cumsum(sample_times[1:,-1]**2)
+
+        cumsum_times = cum_sum_x/cum_n_sample
         print("tol = 10^{-%s}, T  = %.2f" %(n,cumsum_times[-1]))
 
-        start = 5
-        plt.plot(cum_n_sample[start:],cumsum_times[start:],label = r"tol $= (%s)^{-1}, T  = %.2f$" %(n,np.mean(sample_times[:,-1])))
-    plt.plot(cum_n_sample,Ttheoric*np.ones([n_sample]),label = r"Theoric time $T = %.2f$"%(Ttheoric))
+        sample_var = 1 /(cum_n_sample-1) *(cum_sum_x_2 - cum_sum_x**2 / cum_n_sample)
+
+        std_times = np.sqrt(sample_var / cum_n_sample)
+        start = 1000
+        end = min(40000,n_sample)
+
+        label = r" $\varepsilon = (%s)^{-1}, \hat{{\tau}}_{{AB}}  = %.2f$" % (n, np.mean(sample_times[:, -1]))
+        line, = plt.plot(cum_n_sample[start:end], cumsum_times[start:end], label=label)
+
+        color = line.get_color()
+        ci = 1.96 * std_times[start:end]  # 95% confidence interval
+
+        plt.fill_between(cum_n_sample[start:end],
+                     cumsum_times[start:end] - ci,
+                     cumsum_times[start:end] + ci,
+                     color=color, alpha=0.2)
+    
+        #plt.plot(cum_n_sample[start:end], Ttheoric * np.ones(end - start),
+        # label=r"Theoric time $T = %.2f$" % Ttheoric)
+    
+
+    plt.plot(cum_n_sample[start:end],Ttheoric*np.ones([end - start]),label = r"Theoric time $T = %.2f$"%(Ttheoric))
     plt.legend()
     plt.savefig(fig_path+file_name+'_fig.png')
-
+plt.show()

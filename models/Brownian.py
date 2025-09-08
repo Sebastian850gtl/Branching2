@@ -419,6 +419,11 @@ class Modelv3:
         print("End")
         print("Saving samples")
         if save_name:
+            if save_trajectories:
+                self.trajectories = np.array(self.trajectories)
+                np.save(save_name+'_trajectories.npy',self.trajectories)
+            else:
+                pass
             try:
                 previous_save_masses = np.load(save_name+'_masses.npy')
                 previous_save_times = np.load(save_name+'_times.npy')

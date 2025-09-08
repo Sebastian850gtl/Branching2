@@ -1,5 +1,5 @@
 radius = 0.001
-alpha_range = [1]
+alpha_range = [0,1/3,2/3,1]
 x = 0.45
 k = 2
 
