@@ -403,7 +403,7 @@ class Modelv3:
                 k = k + 1
                 self._update_(tol,switch)
                 if save_trajectories:
-                    self.trajectories.append(self.current_position)
+                    self.trajectories.append(self.current_position.copy())
                 else:
                     pass
             
@@ -419,11 +419,6 @@ class Modelv3:
         print("End")
         print("Saving samples")
         if save_name:
-            if save_trajectories:
-                self.trajectories = np.array(self.trajectories)
-                np.save(save_name+'_trajectories.npy',self.trajectories)
-            else:
-                pass
             try:
                 previous_save_masses = np.load(save_name+'_masses.npy')
                 previous_save_times = np.load(save_name+'_times.npy')
@@ -434,5 +429,9 @@ class Modelv3:
                 np.save(save_name+'_times.npy',self.sample_times)
         else:
             pass
-        return None
+
+        if save_trajectories:
+            return np.array(self.trajectories)
+        else:
+            return None
 # When a cluster becomes inactive its clock stops naturally
