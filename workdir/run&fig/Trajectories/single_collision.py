@@ -113,5 +113,5 @@ save_path = '../../results/fig/'
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-plt.savefig(save_path + file_name + '_' + runtag)
+plt.savefig(save_path + file_name + '_' + runtag + '.png')
 plt.show()

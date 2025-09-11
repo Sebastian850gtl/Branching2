@@ -85,7 +85,6 @@ for i,alpha in enumerate(alpha_range):
     sample_sizes_BR, sample_times_BR = concatenate_sim(save_path_i_BR)
 
     n_samples, n_clusters = sample_times_BR.shape
-    n_samples,n_clusters = sample_times_BR.shape
     time_range_BR = np.linspace(0,3*np.mean(sample_times_BR[:,-1]),300)
 
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)

@@ -17,5 +17,5 @@ monodisperse = np.ones([n_clusters])/n_clusters
 init_clusters = lambda alpha : monodisperse
 
 # Simulation parameters :
-n_samples = 4000
+n_samples = 100
 n_runs = 1

@@ -3,6 +3,8 @@ import numpy as np
 
 def concatenate_sim(results_path):
     tmp_results_path = results_path+'/tmp/'
+
+    print(tmp_results_path)
     if os.path.exists(tmp_results_path):
         print("Concatenating results in file "+tmp_results_path)
         directory = os.fsencode(tmp_results_path)
