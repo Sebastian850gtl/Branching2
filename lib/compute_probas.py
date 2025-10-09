@@ -79,7 +79,9 @@ def prob_fun(sample_mass,sample_times,times,masses,k):
 def number_of_masses_bigger_than_x(arr,x):
     def count(D1array):
         return len(np.where(D1array >= x)[0])
-    return np.apply_along_axis(count,arr = arr,axis = 1)
+    
+    res = np.apply_along_axis(count,arr = arr,axis = 1)
+    return res
     
     
 def probs(sample_sizes,sample_times,times,k,x):

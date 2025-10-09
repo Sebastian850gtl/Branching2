@@ -39,9 +39,13 @@ for i,alpha in enumerate(param_module.alpha_range):
     for j,beta in enumerate(param_module.beta_range):
 
         size_init = param_module.init_clusters(alpha)
+        total_mass = np.sum(size_init)
+
+        print(total_mass)
+        
         print(len(size_init.shape))
-        radiusf = lambda x : param_module.radius_0 * (param_module.n_clusters*x)**(beta)
-        sigmaf = lambda x : np.sqrt(2*param_module.D0*(param_module.n_clusters*x)**(-alpha))
+        radiusf = lambda x : param_module.radius_0 * (1/total_mass * param_module.n_clusters*x)**(beta)
+        sigmaf = lambda x : np.sqrt(2*param_module.D0*(1/total_mass * param_module.n_clusters*x)**(-alpha))
         
         M = Model(n_clusters = param_module.n_clusters,sigmafun = sigmaf,radfun = radiusf)
         save_path_n = save_path +"alpha_beta_%.3f_%.3f/tmp"%(alpha,beta)

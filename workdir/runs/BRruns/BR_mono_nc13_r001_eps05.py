@@ -2,7 +2,7 @@ import numpy as np
 
 #Parameters
 
-n_clusters = 42
+n_clusters = 13
 Ntmax = np.inf
 radius_0 = 0.001 # radius of a cluster that has mass 1/N0
 D0 = 1
