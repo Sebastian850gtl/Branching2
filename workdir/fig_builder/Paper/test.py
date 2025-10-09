@@ -39,7 +39,7 @@ time_range_BR = np.linspace(0,tmax,500)
 N = 13
 
 
-BR_N_folder = 'BR_mono_nc'+str(N)+'_r001_eps05'
+BR_N_folder = 'BR_mono_nc'+str(N)+'_r001_eps05_no_int'
 save_path_BR = '../../results/' + BR_N_folder + '/'
 
 save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(0,1/2)
