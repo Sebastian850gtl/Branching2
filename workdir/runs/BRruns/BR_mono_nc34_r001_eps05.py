@@ -5,7 +5,7 @@ import numpy as np
 n_clusters = 34
 Ntmax = np.inf
 radius_0 = 0.001 # radius of a cluster that has mass 1/N0
-D0 = 1
+D0 = 10
 # Parameters of time step scaling
 tol = 0.05
 
@@ -17,5 +17,5 @@ monodisperse = np.ones([n_clusters])/n_clusters
 init_clusters = lambda alpha : monodisperse
 
 # Simulation parameters :
-n_samples = 100
+n_samples = 5000
 n_runs = 1

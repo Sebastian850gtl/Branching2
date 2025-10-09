@@ -31,17 +31,21 @@ if not os.path.exists(save_path):
 
 
 #Parameters
-r1 = 0.001 # rayon d'un cluster de taille 1
-sigma1 = 1
-sigma2 = 1
+r1 = 0.01 # rayon d'un cluster de taille 1
+D1 = 1  
+D2 = 0.5 # Ici D2 = 0 ou D2 = 0.5 ?
+
+sigma1 = np.sqrt(2 * D1)
+sigma2 = np.sqrt(2 * D2)
+
 n_clusters = 2
 Ntmax = np.inf
 
-sigmaf = lambda x : sigma1
+sigmaf = lambda x : sigma1 *(x<= 1) + sigma2 *(x>1)
 
 #M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 tol = 1/30
-radius_range = np.linspace(0,0.1,5)
+radius_range = np.linspace(0.001,0.1,6)
 # Simulation
 
 if not plot:
@@ -55,13 +59,14 @@ if not plot:
             os.makedirs(save_path_i)
         save_name = save_path_i +"/simtag_" +runtag 
         M.run(Ntmax = Ntmax,tol = tol,
-                    n_samples = n_sample,save_name = save_name,stop = 1,size_init = np.array([1,2]))
+                    n_samples = n_sample,save_name = save_name,stop = 1,mass_init = np.array([1,2]))
 else:
     from concatenator import concatenate_sim
     import matplotlib.pyplot as plt
     # Plots
-    radius_range = np.linspace(0.0001,0.1,5)
+    #radius_range = np.linspace(0.001,0.1,6)
     meanTs = []
+    Terr_95 = []
     for i,r2 in enumerate(radius_range):
         save_path_i = save_path +save_path +"radius_"+ str(i)
 
@@ -70,10 +75,19 @@ else:
         n_sample,_ = sample_times.shape
 
         Tmean = np.mean(sample_times[:,1])
+        Tstd = np.std(sample_times[:,1])
         meanTs.append(Tmean)
-    meanTs = np.array(meanTs)
+        Terr_95.append(Tstd* 1.96 / np.sqrt(n_sample))
+        print(Tstd, Tmean)
 
-    f = lambda x : (-np.log(r1 + x) + np.log(2) )* 2/(sigma1**2 + sigma2**2)
+    meanTs = np.array(meanTs)
+    Terr_95 = np.array(Terr_95)
+
+    np.save(save_path + "vaues_of_r2.npy",radius_range)
+    np.save(save_path + "means.npy",meanTs)
+    np.save(save_path + "Terr_95.npy",Terr_95)
+
+    f = lambda x : (-np.log(r1 + x) + np.log(2) )* 1/(D1 + D2)
     radius_linspace = np.linspace(radius_range[0],radius_range[-1],200)
 
     intercept = np.mean(f(radius_range) - meanTs)
@@ -81,10 +95,12 @@ else:
     g = lambda x : f(x) - intercept
 
     plt.figure(dpi = 300)
-    plt.plot(radius_linspace,g(radius_linspace),label = r'$r \mapsto \dfrac{-\log\left(%.4f + r\right) + \log(2) }{%.1f + %.1f} + %.2f$'%(r1,sigma1**2/2,sigma2**2/2,intercept),
+    plt.plot(radius_linspace,g(radius_linspace),label = r'$r_2 \mapsto \dfrac{-\log\left(%.4f + r_2\right) + \log(2) }{%.1f + %.1f} + %.2f$'%(r1,sigma1**2/2,sigma2**2/2,intercept),
              color = 'darkorange')
     plt.scatter(radius_range,meanTs,label = r'$\hat{T}$',color = 'blue')
+    plt.errorbar(radius_range,meanTs, yerr=Terr_95, fmt='o', color='blue', capsize=5)
     plt.legend()
     plt.ylabel("Time")
-    plt.xlabel(r"$r_B$")
+    plt.xlabel(r"$r_2$")
     plt.savefig(fig_path+file_name+'_fig.png')
+    plt.show()

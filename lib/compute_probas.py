@@ -85,7 +85,7 @@ def number_of_masses_bigger_than_x(arr,x):
 def probs(sample_sizes,sample_times,times,k,x):
     """ Returns the probability to have more or equal than k cluster of size >= size at
     time t (t can also be an array)"""
-    print(x)
+    #print(x)
     ind_Tt = state(sample_times,times)
     n_times = len(times)
     n_samples,_ = sample_times.shape
