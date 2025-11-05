@@ -213,8 +213,8 @@ def colliding_sets(I,J):
 
 def handle_collisions(I,J,mass,active):
     new_active = list(active)
-    if np.min(mass) < 1/100:
-        print("HEEREE")
+    # if np.min(mass) < 1/100:
+    #     print("HEEREE")
     #print("Before mass:",mass)
     #print("Before active:",active)
     if len(I) == 1:
@@ -278,7 +278,7 @@ class Modelv3:
         
         return None
     
-    def _update_(self,tol,switch):
+    def _update_(self,tol,switch,reduced = False):
         """Updates cluster positions and handles collisionevents 
         Arguments:
             tol : The tolerance paramter  for estimating the probability of  missing a collision    
@@ -323,7 +323,7 @@ class Modelv3:
             pass
         if len(self.active)> 1:
 
-            self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist)
+            self._adapt_dt_(tol,cross_sigmas_squares = cross_sigmas_squares,cross_radiuses = cross_radiuses,dist = dist,reduced = reduced)
 
             # updating position
             U = reflected_brownian_sphere(X,self.active_sigmas,self.dt,switch = switch)
@@ -334,16 +334,27 @@ class Modelv3:
         return None
         
     
-    def _adapt_dt_(self,tol,cross_sigmas_squares,dist,cross_radiuses):
+    def _adapt_dt_(self,tol,cross_sigmas_squares,dist,cross_radiuses, reduced = False):
         """ Function adapting the time step to the current realtive cluster positions"""
-        dt = np.min(((dist)**2/(2*cross_sigmas_squares)))* tol 
+        if reduced:
+            indices = np.where(np.tan(np.exp(-1/tol)*np.pi) < cross_radiuses/dist)
+            if len(indices[0])> 0:
+                #dt = np.min(((dist[indices])**2/(2*cross_sigmas_squares[indices]))) * tol 
+
+                dt = np.min(((dist[indices])**2/(2*cross_sigmas_squares[indices])) *(1 / (1/tol  + np.log(np.arctan(cross_radiuses[indices]/dist[indices])/np.pi)) ))
+
+                #print(dt - dt_1)
+            else:
+                dt = np.min(((dist)**2/(2*cross_sigmas_squares))) * 1/5 # In this case clusters are too far and the probability is always below the "tol" given control
+        else:
+            dt = np.min(((dist)**2/(2*cross_sigmas_squares)))* tol 
         if np.isnan(dt):
             print('===================================')
         self.dt = dt
         return None
         
     def run(self,Ntmax,n_samples = 1,stop = 1,tol = 1e-3,switch = 0.005,position_init = False,mass_init = False
-            ,save_trajectories = False, save_name = None):
+            ,save_trajectories = False, save_name = None,reduced = False):
         """  Runs the model
         Arguments:
             Ntmax  :Maximum number of time iterations
@@ -401,7 +412,7 @@ class Modelv3:
             k = 0
             while k <= Ntmax and len(self.active) >stop:
                 k = k + 1
-                self._update_(tol,switch)
+                self._update_(tol,switch,reduced = reduced)
                 if save_trajectories:
                     self.trajectories.append(self.current_position.copy())
                 else:

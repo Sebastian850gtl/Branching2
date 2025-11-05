@@ -31,19 +31,15 @@ from scipy.integrate import quad
 from scipy.stats import norm, gamma
 from scipy.special import gamma as Gamma
 
-Ns1 = [26,28,30,32,34]
-
-Ns2 = [36,38,40,42,44,46]
-
-Ns = Ns1 + Ns2
+Ns = [26,27,28,29,30,31,32,33,34]
 T = 12
-compute = 0
+compute = 1
 
+D = 10
+tmax = 2 * D
+time_range_BR = np.linspace(0,tmax,300)
 if compute :
-    D = 1
-    tmax = 2 * D
-    time_range_BR = np.linspace(0,tmax,300)
-    for N in Ns1:
+    for N in Ns:
         BR_N_folder = 'BR_mono_nc' + str(N) + '_r001_eps05'
         save_path_BR = '../../results/' + BR_N_folder + '/'
 
@@ -51,26 +47,23 @@ if compute :
 
         sample_sizes_BR, sample_times_BR = concatenate_sim(save_path_i_BR)
 
-        probas = probs(sample_sizes_BR,sample_times_BR,time_range_BR,2,T/N)
+        probas = probs(sample_sizes_BR,sample_times_BR,time_range_BR,2,T)
 
         proba_function = np.array([time_range_BR / D, probas])
         np.save( save_path + 'proba_N_' + str(N) + '.npy',proba_function)
 
-    D = 10
-    tmax = 2 * D
-    time_range_BR = np.linspace(0,tmax,300)
-    for N in Ns2:
         BR_N_folder = 'BR_mono_nc' + str(N) + '_r001_eps05'
         save_path_BR = '../../results/' + BR_N_folder + '/'
 
-        save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(0,1/2)
+        save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(0,0)
 
         sample_sizes_BR, sample_times_BR = concatenate_sim(save_path_i_BR)
 
-        probas = probs(sample_sizes_BR,sample_times_BR,time_range_BR,2,T/N)
+        probas = probs(sample_sizes_BR,sample_times_BR,time_range_BR,2,T)
 
         proba_function = np.array([time_range_BR / D, probas])
-        np.save( save_path + 'proba_N_' + str(N) + '.npy',proba_function)
+        np.save( save_path + 'proba_N_' + str(N) + 'const.npy',proba_function)
+
 else:
     pass
 
@@ -82,6 +75,15 @@ for N in Ns:
 
 plt.legend()
 plt.savefig(fig_path + "figure8_1.png")
-plt.show()
 
+
+plt.figure(dpi = 200)
+for N in Ns:
+    proba_function = np.load( save_path + 'proba_N_' + str(N) + 'const.npy')
+
+    plt.plot( proba_function[0,:] , proba_function[1,:], label = "N = "+str(N))
+
+plt.legend()
+plt.savefig(fig_path + "figure8_1_const.png")
+plt.show()
 

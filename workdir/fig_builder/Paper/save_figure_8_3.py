@@ -19,9 +19,10 @@ fig_path = '../../results/fig/'
 if not os.path.exists(fig_path):
     os.makedirs(fig_path)
 
-save_path = '../../results/figure8_2/'
+save_path = '../../results/figure8_3/'
 if not os.path.exists(save_path):
     os.makedirs(save_path)
+
 
 from compute_probas import probs,state
 from concatenator import concatenate_sim
@@ -30,16 +31,13 @@ from scipy.integrate import quad
 from scipy.stats import norm, gamma
 from scipy.special import gamma as Gamma
 
-Ns = [36,38,40,42,44,46,48,50]
-T = 17
-
-D = 10
-tmax = 2 * D
+Ns = [13,14,15,16,17,18]
+T = 6
 compute = 1
-time_range_BR = np.linspace(0,tmax,300)
-
+D = 10
 if compute :
-
+    tmax = 2 * D
+    time_range_BR = np.linspace(0,tmax,300)
     for N in Ns:
         BR_N_folder = 'BR_mono_nc' + str(N) + '_r001_eps05'
         save_path_BR = '../../results/' + BR_N_folder + '/'
@@ -64,6 +62,7 @@ if compute :
 
         proba_function = np.array([time_range_BR / D, probas])
         np.save( save_path + 'proba_N_' + str(N) + 'const.npy',proba_function)
+
 else:
     pass
 
@@ -74,7 +73,7 @@ for N in Ns:
     plt.plot( proba_function[0,:] , proba_function[1,:], label = "N = "+str(N))
 
 plt.legend()
-plt.savefig(fig_path + "figure8_2.png")
+plt.savefig(fig_path + "figure8_3.png")
 
 plt.figure(dpi = 200)
 for N in Ns:
@@ -83,7 +82,10 @@ for N in Ns:
     plt.plot( proba_function[0,:] , proba_function[1,:], label = "N = "+str(N))
 
 plt.legend()
-plt.savefig(fig_path + "figure8_2_const.png")
+plt.savefig(fig_path + "figure8_3_const.png")
+plt.show()
+
+
 plt.show()
 
 

@@ -30,6 +30,10 @@ param_module = importlib.import_module(parameters_file_name)
 radius = param_module.radius
 alpha_range = param_module.alpha_range
 k = param_module.k
+xmin = param_module.x
+Nx = param_module.Nx
+Nt = param_module.Nt
+
 
 BR_folder = param_module.BR_folder
 SC_folder = param_module.SC_folder
@@ -104,8 +108,8 @@ analytic = lambda x,t,alpha : f(x,t,alpha)
 
 
 use_saved_branching_proba = 1
-Nx, Nt = 100, 200 # Used only if use_saved_branching_proba = 0
-masses = np.linspace(0.1,1,Nx) # Used only if use_saved_branching_proba = 0
+#Nx, Nt = 100, 200 # Used only if use_saved_branching_proba = 0
+masses = np.linspace(xmin,1,Nx) # Used only if use_saved_branching_proba = 0
 d = 1
 k = 2
 for i,alpha in enumerate(alpha_range):
@@ -247,15 +251,69 @@ for i,alpha in enumerate(alpha_range):
     #plt.legend()
     #plt.savefig(fig_path+parameters_file_name+'_%.3f_dist.png'%(alpha))
     
-    plt.figure(dpi = 200)
-    plt.title("Comparpar mass alpha = "+str(alpha))
-    plt.plot(masses,branching_proba_BR[:,100])
-    plt.plot(masses,branching_proba_SC[:,100])
-    plt.plot(masses,branching_proba_CASC[:,100])
+    # plt.figure(dpi = 200)
+    # plt.title("Comparpar mass alpha = "+str(alpha))
+    # plt.plot(masses,branching_proba_BR[:,100])
+    # plt.plot(masses,branching_proba_SC[:,100])
+    # plt.plot(masses,branching_proba_CASC[:,100])
     
-    plt.figure(dpi = 200)
-    plt.title("Comparpar time alpha = "+str(alpha))
-    plt.plot(time_range,branching_proba_BR[37,:Nt])
-    plt.plot(time_range,branching_proba_SC[37,:Nt])
-    plt.plot(time_range,branching_proba_CASC[37,:Nt])
-#plt.show()
+    # plt.figure(dpi = 200)
+    # plt.title("Comparpar time alpha = "+str(alpha))
+    # plt.plot(time_range,branching_proba_BR[37,:Nt])
+    # plt.plot(time_range,branching_proba_SC[37,:Nt])
+    # plt.plot(time_range,branching_proba_CASC[37,:Nt])
+
+
+    # Plotting the 3D plot of the branching probability
+    Ntplot = 120
+    Nxplot = 40
+
+    from matplotlib.colors import LightSource
+    
+    M, T = np.meshgrid(masses[:Nxplot], time_range[:Ntplot])
+    branching_proba_BR
+    fig = plt.figure(dpi=200)
+    ax = fig.add_subplot(111, projection='3d')
+
+    surf = ax.plot_surface(
+    M,
+    T,
+    branching_proba_BR.T[:Ntplot, :Nxplot],
+    cmap='viridis',           # smooth and perceptually uniform
+    linewidth=0,              # no grid lines on surface
+    antialiased=True,         # smoother surface
+    shade=True,               # enables light shading
+    alpha=0.0,               # slight transparency looks nice
+    )
+
+    ls = LightSource(azdeg=180, altdeg=20)
+    rgb = ls.shade(branching_proba_BR.T[:Ntplot, :Nxplot], cmap=plt.cm.viridis_r, vert_exag=0.5, blend_mode='soft')
+    surf = ax.plot_surface(M, T, branching_proba_BR.T[:Ntplot, :Nxplot], facecolors=rgb, linewidth=0, antialiased=True)
+    # # Optional: add custom lighting
+    # surf.set_facecolor((0, 0, 0, 0))  # makes the background transparent
+    # ax.plot_surface(
+    #     M,
+    #     T,
+    #     branching_proba_BR.T[:Ntplot, :Nxplot],
+    #     cmap='viridis',
+    #     rstride=1, cstride=1,
+    #     linewidth=0,
+    #     antialiased=True,
+    #     shade=True,
+    # )
+
+    # Labels
+    ax.set_xlabel('Mass', labelpad=10)
+    ax.set_ylabel('Time', labelpad=10)
+    ax.set_zlabel('Branching Probability', labelpad=10)
+    # ax.set_title('Branching Probability as a Function of Mass and Time')
+
+    # Colorbar
+    fig.colorbar(surf, ax=ax, shrink=0.6, aspect=10, label='Probability')
+
+    # Optional tweaks for better perspective
+    ax.view_init(elev=30, azim=240)  # change viewing angle
+    ax.dist = 10                      # camera distance
+
+    plt.tight_layout()
+    plt.show()

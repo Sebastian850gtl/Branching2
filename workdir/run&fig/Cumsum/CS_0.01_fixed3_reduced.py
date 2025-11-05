@@ -31,7 +31,7 @@ if not os.path.exists(save_path):
     os.makedirs(save_path)
 
 #%% Parameters
-r = 0.001 # rayon d'un cluster de taille 1
+r = 0.01 # rayon d'un cluster de taille 1
 sigma1 = 1
 sigma2 = 0
 n_clusters = 2
@@ -53,7 +53,7 @@ if not plot:
             os.makedirs(save_path_n)
         save_name = save_path_n +"/simtag_" +runtag
         M.run(Ntmax = Ntmax,tol = tol,
-                    n_samples = n_sample,save_name = save_name,stop = 1,mass_init = np.array([2,1]))
+                    n_samples = n_sample,save_name = save_name,stop = 1,mass_init = np.array([2,1]),reduced = True)
 
 else:
     import matplotlib.pyplot as plt
@@ -65,7 +65,7 @@ else:
         os.makedirs(fig_path)
 
     #%% Parameters
-    r = 0.001 # rayon d'un cluster de taille 1
+    r = 0.01 # rayon d'un cluster de taille 1
     sigma1 = 1
     sigma2 = 0
     n_clusters = 2
@@ -79,7 +79,7 @@ else:
 
     plt.figure(dpi = 300)
     plt.xlabel("Number of samples")
-    for n in [5,10,20,40,50]:#,50]:
+    for n in [10,20,40,50]:#,50]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)
         

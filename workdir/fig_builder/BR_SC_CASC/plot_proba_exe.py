@@ -17,7 +17,7 @@ from CAML import CAML
 #Files locations
 
 
-fig_path = '../../results/fig/'
+fig_path = '../../results/fig/BR_SC_CASC/'
 if not os.path.exists(fig_path):
     os.makedirs(fig_path)
 
@@ -73,6 +73,7 @@ analytic2 = lambda x,t,alpha : (q(x,t,alpha))**2 *(1 - norm.cdf((1 - C1(alpha)*t
 
 # analytic3 = lambda x,t,alpha : 1 / Gamma(1 + alpha)**2* (1 + alpha)**(2*alpha)* x**(2*alpha)*(1 - 2*x)**((1 + alpha)*C1(alpha)*t**(-1/(1+alpha))-1-2*alpha)* (1 - norm.cdf((1 - C1(alpha)*t**(-1/(1+alpha)))/(C2(alpha)*t**(-1/(2+2*alpha)))))
 
+analytic3 = lambda x,t,alpha : (1 - 2*x)**(1/t) * np.exp(-t)
 print("Hello")
 for i,alpha in enumerate(alpha_range):
     plt.figure(dpi = 200)
@@ -90,7 +91,7 @@ for i,alpha in enumerate(alpha_range):
     probies = probs(sample_sizes_BR,sample_times_BR,time_range_BR,k,x)
     #print(probies)
     time_range =  time_range_BR *(n_clusters)**(-alpha) *1/(-np.log(2*radius) + np.log(2)) #To be able to compare BR with SC and CASC we divide be the costant in front of the kernel.
-    plt.plot(time_range,probies, label = r"Brownian coalescence")
+    plt.plot(time_range,probies, label = r"Brownian coalescence", color = "crimson",marker = "^", linestyle = "dashed",markevery=30)
 
     #print("Computing probas for BR, parameters : alpha = %.3f, beta = %.3f"%(alpha,0.5))
     #save_path_i_BR = save_path_BR + "alpha_beta_%.3f_%.3f"%(alpha,0.5)
@@ -109,7 +110,7 @@ for i,alpha in enumerate(alpha_range):
 
     #time_range = np.linspace(0,3*np.mean(sample_times_ML[:,-1]),100)
     probies = probs(sample_sizes_ML,sample_times_ML,time_range,k,x)
-    plt.plot(time_range,probies, label = r"Stochastic coalescence")
+    plt.plot(time_range,probies, label = r"Stochastic coalescence",color = "darkgreen",marker = "*", linestyle = "dotted",markevery=30)
 
     # CAML
     print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )
@@ -118,7 +119,7 @@ for i,alpha in enumerate(alpha_range):
     n_samples,n_clusters = sample_times_CAML.shape
     
     probies = probs(sample_sizes_CAML,sample_times_CAML,time_range,k,x)
-    plt.plot(time_range,probies, label = r"CASC")
+    plt.plot(time_range,probies, label = r"CASC", color = "darkcyan",marker = "h", linestyle = "dashdot",markevery=30)
 
     # Gaussian fluct
     print("Computing analytic 1 : alpha = %.3f"%(alpha) )
@@ -127,7 +128,7 @@ for i,alpha in enumerate(alpha_range):
 
     ts = time_range
     ts[0] = ts[1]
-    plt.plot(ts, analytic(x,ts,alpha), label = r"Analytic")
+    plt.plot(ts, analytic(x,ts,alpha), label = r"Analytic", color = "darkorchid",markevery=20)
 
     # # Gaussian fluct2
     # print("Computing probas for CAML, parameters : alpha = %.3f"%(alpha) )

@@ -46,7 +46,7 @@ M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 # simulation
 if not plot:
     M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-    for n in [5,10,20,40,50]:
+    for n in [5,10,20,40]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)+'/tmp'
         if not os.path.exists(save_path_n):
@@ -75,7 +75,7 @@ else:
     # Plots
     # Simus with different Rslow
     R = 1
-    Ttheoric = (-np.log(2*r/R) + np.log(2))* 1/(sigma1**2/2 + sigma2**2/2)
+    Ttheoric = (-np.log(2*r/R) + np.log(2))* R**2 /(sigma1**2/2 + sigma2**2/2)
 
     plt.figure(dpi = 300)
     plt.xlabel("Number of samples")
@@ -95,15 +95,16 @@ else:
         cum_sum_x_2 = np.cumsum(sample_times[1:,-1]**2)
 
         cumsum_times = cum_sum_x/cum_n_sample
-        print("tol = 10^{-%s}, T  = %.2f" %(n,cumsum_times[-1]))
+        print("tol = 1/%s, T  = %.2f" %(n,cumsum_times[-1]))
+        print("prob = %.2f" %(np.exp(-n)))
 
         sample_var = 1 /(cum_n_sample-1) *(cum_sum_x_2 - cum_sum_x**2 / cum_n_sample)
 
         std_times = np.sqrt(sample_var / cum_n_sample)
         start = 1000
-        end = min(40000,n_sample)
+        end = n_sample
 
-        label = r" $\varepsilon = (%s)^{-1}, \hat{{\tau}}_{{AB}}  = %.2f$" % (n, np.mean(sample_times[:, -1]))
+        label = r" tol$ = (%s)^{-1}, \hat{{\tau}}_{{AB}}  = %.2f$" % (n, np.mean(sample_times[:, -1]))
         line, = plt.plot(cum_n_sample[start:end], cumsum_times[start:end], label=label)
 
         color = line.get_color()
@@ -118,7 +119,7 @@ else:
         # label=r"Theoric time $T = %.2f$" % Ttheoric)
     
 
-    plt.plot(cum_n_sample[start:end],Ttheoric*np.ones([end - start]),label = r"Theoric time $T = %.2f$"%(Ttheoric))
+    plt.plot(cum_n_sample[start:end],Ttheoric*np.ones([end - start - 1]),label = r"Theoric time $T = %.2f$"%(Ttheoric))
     plt.legend()
     plt.savefig(fig_path+file_name+'_fig.png')
-plt.show()
+    plt.show()

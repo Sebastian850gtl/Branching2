@@ -46,14 +46,14 @@ M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
 # simulation
 if not plot:
     M = Model(n_clusters = n_clusters,sigmafun = sigmaf,radfun = radiusf)
-    for n in [5,10,20,40,50]:
+    for n in [5,10,20,40]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)+'/tmp'
         if not os.path.exists(save_path_n):
             os.makedirs(save_path_n)
         save_name = save_path_n +"/simtag_" +runtag
         M.run(Ntmax = Ntmax,tol = tol,
-                    n_samples = n_sample,save_name = save_name,stop = 1,mass_init = np.array([2,1]))
+                    n_samples = n_sample,save_name = save_name,stop = 1,mass_init = np.array([2,1]),reduced = True)
 
 else:
     import matplotlib.pyplot as plt
@@ -79,7 +79,7 @@ else:
 
     plt.figure(dpi = 300)
     plt.xlabel("Number of samples")
-    for n in [5,10,20,40,50]:#,50]:
+    for n in [10,20,40]:#,50]:
         tol = 1/n
         save_path_n = save_path +"tol_"+ str(n)
         
